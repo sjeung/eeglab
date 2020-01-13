@@ -97,7 +97,7 @@
 %   EEG.icawinv     - inverse (ICA) weight matrix. Columns gives the projected
 %                     topographies of the components to the electrodes.
 %   EEG.icaact      - ICA activations matrix (components, frames, epochs)
-%                     Note: [] here means that 'compute_ica' option has bee set
+%                     Note: [] here means that 'compute_ica' option has been set
 %                     to 0 under 'File > Memory options' In this case,
 %                     component activations are computed only as needed.
 %   EEG.icasplinefile - location of the spline file used by headplot() to plot
@@ -291,7 +291,8 @@ for inddataset = 1:length(ALLEEG)
                 case 'event',
                     if isempty(EEG.event)
                         errordlg2(strvcat('Requires events. You need to add events first.', ...
-                            'Use "File > Import event info" or "File > Import epoch info"'), 'Error');
+                            'Use "File > Import event info" or "File > Import epoch info"', ...
+                            'Install plugin VidEd to manually add events as you scroll the data.' ), 'Error');
                         return;
                     end
                 case 'chanloc',

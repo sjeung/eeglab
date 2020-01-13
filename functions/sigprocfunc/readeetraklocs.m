@@ -71,6 +71,7 @@ function chanlocs = readeetraklocs( filename )
     end
     
     % get positions
+<<<<<<< HEAD
     %----------------
     positions = locs(indpos + 1:indlabels-1,:);
     
@@ -86,13 +87,19 @@ function chanlocs = readeetraklocs( filename )
     positionMatrix                        = cell2mat(positions);
     positions                             = positionMatrix(:,all(~isnan(positionMatrix)));
     
+=======
+    % -------------
+    positions = locs(indpos+1:indlabels-1,1:3);
+    labels    = locs(indlabels+1:end,:);
+        
+>>>>>>> 4336119895b409e22cbbe1e17ffb1924286466ad
     % create structure
     % ----------------
     for index = 1:length(labels)
         chanlocs(index).labels = labels{index};
-        chanlocs(index).X      = positions(index,1);
-        chanlocs(index).Y      = positions(index,2);
-        chanlocs(index).Z      = positions(index,3);
-    end;
-    
+        chanlocs(index).X      = positions{index,1};
+        chanlocs(index).Y      = positions{index,2};
+        chanlocs(index).Z      = positions{index,3};
+    end
+        
     chanlocs = convertlocs(chanlocs, 'cart2all');
