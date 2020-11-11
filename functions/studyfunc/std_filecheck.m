@@ -40,50 +40,39 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, 2006, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [ res, params2 ] = std_filecheck(filename, params2, guiflag, ignorefields);
     
     if nargin < 2
         help std_filecheck;
         return;
-    end
+    end;
     if nargin < 3
         guiflag = 'guion';
-    end
+    end;
     if nargin < 4
         ignorefields = {};
-    end
+    end;
     
-    if ~exist( filename ), res = guiflag; return; end
+    if ~exist( filename ), res = guiflag; return; end;
         
     params1 = load('-mat', filename, 'parameters');
     params1 = finputcheck( params1.parameters, { 'tmp' 'real' [] NaN}, '', 'ignore'); % allow to tackle duplicate fields
     params1 = rmfield(params1, 'tmp');
-    if iscell(params2), params2 = struct(params2{:}); end
+    if iscell(params2), params2 = struct(params2{:}); end;
     
     % test if the fields are different
     % --------------------------------
@@ -98,29 +87,29 @@ function [ res, params2 ] = std_filecheck(filename, params2, guiflag, ignorefiel
     res = 'same';
     if ~isequal( fields1, fields2 ),
         for ind = 1:length(allfields)
-            if strcmpi(allfields{ind}, 'plotitc'), adsfads; end
+            if strcmpi(allfields{ind}, 'plotitc'), adsfads; end;
             if ~isfield( params1, allfields{ind})
-                if ischar(getfield(params2, allfields{ind}))
+                if isstr(getfield(params2, allfields{ind}))
                      params1 = setfield(params1, allfields{ind}, '');
                 else params1 = setfield(params1, allfields{ind}, []);
-                end
+                end;
                 res = 'different';
-            end
+            end;
             if ~isfield( params2, allfields{ind})
-                if ischar(getfield(params1, allfields{ind}))
+                if isstr(getfield(params1, allfields{ind}))
                      params2 = setfield(params2, allfields{ind}, '');
                 else params2 = setfield(params2, allfields{ind}, []);
-                end
+                end;
                 res = 'different';
-            end
-        end
-    end
+            end;
+        end;
+    end;
     
     % data type
     % ---------
     if ~isempty(strmatch('cycles', allfields)), strcom = 'ERSP';
     else                                        strcom = 'SPECTRAL';
-    end
+    end;
     
     % compare fields
     % --------------
@@ -137,7 +126,7 @@ function [ res, params2 ] = std_filecheck(filename, params2, guiflag, ignorefiel
                 res        = 'different';
                 txt{end+1} = tmptxt;
             elseif ~isequal(val1, val2)
-                if ~isnan(val1) && ~isnan(val2)
+                if ~isnan(val1) & ~isnan(val2)
                     res        = 'different';
                     txt{end+1} = tmptxt;
                 end
@@ -157,15 +146,15 @@ function [ res, params2 ] = std_filecheck(filename, params2, guiflag, ignorefiel
             strvcat(txt{:})
             error([ 'Two ' strcom ' files had different parameters and the ' strcom ' function' 10 ...
                           'cannot handle that. We suggest that you delete all files. See command line details' ]);
-        end
+        end;
     elseif strcmpi(guiflag, 'recompute'), 
         res     = 'recompute';
         disp(['Deleting and recomputing file: ' filename ]);
         return;
-    elseif strcmpi(res, 'same') && ( strcmpi(guiflag, 'guion') || strcmpi(guiflag, 'same') )
+    elseif strcmpi(res, 'same') & ( strcmpi(guiflag, 'guion') | strcmpi(guiflag, 'same') )
         disp(['Using file on disk: ' filename ]);
         return;
-    end
+    end;
     
     set_yes = [ 'set(findobj(''parent'', gcbf, ''tag'', ''ersp_no''), ''value'', 0);'];
     set_no  = [ 'set(findobj(''parent'', gcbf, ''tag'', ''ersp_yes''), ''value'', 0);' ];
@@ -187,7 +176,7 @@ function [ res, params2 ] = std_filecheck(filename, params2, guiflag, ignorefiel
     ersp_ans = inputgui('geometry', {[1] [1] [1] [1] [0.5 1] }, 'geomvert', [2 max(length(txt),1)*0.7 1 1 1 1], 'uilist', uilist, ...
                         'helpcom', '', 'title', ['Recalculate ' upper(strcom) ' parameters -- part of std_ersp()']); 
                         
-    if isempty(ersp_ans), res = 'cancel'; return; end
+    if isempty(ersp_ans), res = 'cancel'; return; end;
     if find(celltomat(ersp_ans))  == 2 % use existing ERSP info from this dataset
         disp(['Using file on disk: ' filename ]);
         params2 = params1;

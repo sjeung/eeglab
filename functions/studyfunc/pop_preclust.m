@@ -34,36 +34,25 @@
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, May 13,2004, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [STUDY, ALLEEG, com] = pop_preclust(varargin)
 
 com = '';
 
-if ~ischar(varargin{1}) %intial settings
+if ~isstr(varargin{1}) %intial settings
     if length(varargin) < 2
         error('pop_preclust(): needs both ALLEEG and STUDY structures');
     end
@@ -89,7 +78,7 @@ if ~ischar(varargin{1}) %intial settings
                     'This is because some datasets do not have ICA pairs. Look for NaN values in ' 10 ...
                     'STUDY.cluster(1).sets which indicate missing datasets. Each column in this ' 10 ...
                     'array indicate datasets with common ICA decompositions' ]);
-    end
+    end;
     if length(STUDY.design(STUDY.currentdesign).cases.value) ~= length(STUDY.subject)
         warndlg2( [ 'GO BACK TO THE DESIGN INTERFACE AND SELECT A DESIGN THAT ' 10 ...
                     'INCLUDES ALL DATASETS. Some subjects or datasets have been excluded' 10 ...
@@ -128,9 +117,9 @@ if ~ischar(varargin{1}) %intial settings
                 show_options{count} = ['         ' STUDY.cluster(indclust3).name ' (' num2str(length(STUDY.cluster(indclust3).comps))  ' ICs)'];
                 cls(count) = indclust3;
                 count = count+1;
-            end
-        end
-    end
+            end;
+        end;
+    end;
 
     % callbacks
     % ---------
@@ -143,7 +132,6 @@ if ~ischar(varargin{1}) %intial settings
     set_erp      = ['pop_preclust(''seterp'',gcf);']; 
     set_scalp    = ['pop_preclust(''setscalp'',gcf);']; 
     set_dipole   = ['pop_preclust(''setdipole'',gcf);'];
-    set_moment   = ['pop_preclust(''setmoment'',gcf);'];
     set_ersp     = ['pop_preclust(''setersp'',gcf);']; 
     set_itc      = ['pop_preclust(''setitc'',gcf);']; 
     set_secpca   = ['pop_preclust(''setsec'',gcf);']; 
@@ -164,74 +152,64 @@ if ~ischar(varargin{1}) %intial settings
                   'set(findobj(''parent'', gcbf, ''tag'', ''studyfile''), ''string'', [filepath filename]);' ];
     str_name   = ['Build pre-clustering matrix for STUDY set:  ' STUDY.name '' ];
     str_time   = '';
-    str_lpfilt = '20';
     help_secpca = [ 'warndlg2(strvcat(''This is the final number of dimensions (otherwise use the sum'',' ...
                     '''of dimensions for all the selected options). See tutorial for more info''), ''Final number of dimensions'');' ];
-    cb_help = [ 'warndlg2( strvcat(''When clustering on both time- and location-based measures, take care'',' ... 
-                                   '''when performing statistical tests on cluster measures to avoid so-called'',' ...
-                                   '''''''double dipping'''' problems in interpreting the results: Adequate nonparametric'',' ...
-                                   '''statistical testing should be performed to test their robustness.''));' ];
-        
+
     gui_spec = { ...
     {'style' 'text'       'string' str_name 'FontWeight' 'Bold' 'horizontalalignment' 'left'} ...
-    {'style' 'text'       'string' 'Only measures that have been precomputed may be used for clustering'} ...
-    {'style' 'text'       'string' 'Mixing time-based and location-based measures might result in statistical double-dipping'} ...
-    {'style' 'pushbutton' 'string' 'Help' 'callback' cb_help } ...
-    {'style' 'text'       'string' 'Time-based info             PCA              Weight' 'FontWeight' 'Bold'} ...
+	{'style' 'text'       'string' 'Select the cluster to refine by sub-clustering (any existing sub-hierarchy will be overwritten)' } {} ...
+    {'style' 'listbox'    'string' show_options 'value' 1 'tag' 'clus_list' 'Callback' show_clust 'max' 1 } {}  {} ...
+    {'style' 'text'       'string' 'Note: Only measures that have been precomputed may be used for clustering.'} ...
+    {'style' 'text'       'string' 'Measures                         Dims.   Norm.   Rel. Wt.' 'FontWeight' 'Bold'} ...
     {'style' 'checkbox'   'string' '' 'tag' 'spectra_on' 'value' 0 'Callback' set_spectra 'userdata' '1'}  ...
 	{'style' 'text'       'string' 'spectra' 'horizontalalignment' 'center' } ...
-	{'style' 'edit'       'string' '10' 'tag' 'spectra_PCA' 'enable' 'off' 'userdata' 'specP'} { } ...
+	{'style' 'edit'       'string' '10' 'tag' 'spectra_PCA' 'enable' 'off' 'userdata' 'specP'} ...
+    {'style' 'checkbox'   'string' '' 'tag' 'spectra_norm' 'value' 1 'enable' 'off' 'userdata' 'specP' } ...
     {'style' 'edit'       'string' '1' 'tag' 'spectra_weight' 'enable' 'off' 'userdata' 'specP'} ...
     {'style' 'text'       'string' 'Freq.range [Hz]' 'tag' 'spectra_freq_txt' 'userdata' 'spec' 'enable' 'off' } ...
 	{'style' 'edit'       'string' '3  25'  'tag' 'spectra_freq_edit' 'userdata' 'spec' 'enable' 'off' } { } { } ...
-    ...
     {'style' 'checkbox'   'string' '' 'tag' 'erp_on' 'value' 0 'Callback' set_erp 'userdata' '1'}  ...
 	{'style' 'text'       'string' 'ERPs' 'horizontalalignment' 'center' } ...
-    {'style' 'edit'       'string' '10' 'tag' 'erp_PCA' 'enable' 'off' 'userdata' 'erpP'} { } ...
+    {'style' 'edit'       'string' '10' 'tag' 'erp_PCA' 'enable' 'off' 'userdata' 'erpP'} ...
+    {'style' 'checkbox'   'string' '' 'tag' 'erp_norm' 'value' 1 'enable' 'off' 'userdata' 'erpP' } ...
     {'style' 'edit'       'string' '1' 'tag' 'erp_weight' 'enable' 'off' 'userdata' 'erpP'} ...
     {'style' 'text'       'string' 'Time range [ms]' 'tag' 'erp_time_txt' 'userdata' 'erp' 'enable' 'off' } ...
-	{'style' 'edit'       'string' str_time 'tag' 'erp_time_edit' 'userdata' 'erp' 'enable' 'off' }...
-    {'style' 'text'       'string' 'Lowpass [Hz]' 'tag' 'erp_filter_txt' 'userdata' 'erp' 'enable' 'off' } ...
-	{'style' 'edit'       'string' str_lpfilt 'tag' 'erp_filter_edit' 'userdata' 'erp' 'enable' 'off' }...
-    ...
+	{'style' 'edit'       'string' str_time 'tag' 'erp_time_edit' 'userdata' 'erp' 'enable' 'off' } { } { }...
+	{'style' 'checkbox'   'string' '' 'tag' 'dipole_on' 'value' 0 'Callback' set_dipole 'userdata' '1'} ...
+	{'style' 'text'       'string' 'dipoles' 'HorizontalAlignment' 'center' } ...
+	{'style' 'text'       'string' '3' 'enable' 'off' 'userdata' 'dipoleP' } ...
+	{'style' 'checkbox'   'string' '' 'tag' 'locations_norm' 'value' 1 'enable' 'off' 'userdata' 'dipoleP'}  ...
+	{'style' 'edit'       'string' '10' 'tag' 'locations_weight' 'enable' 'off' 'userdata' 'dipoleP'} {} {} {} {} ...
+    {'style' 'checkbox'   'string' '' 'tag' 'scalp_on' 'value' 0 'Callback' set_scalp 'userdata' '1'} ...
+	{'style' 'text'       'string' 'scalp maps' 'HorizontalAlignment' 'center' } ...
+	{'style' 'edit'       'string' '10' 'tag' 'scalp_PCA' 'enable' 'off' 'userdata' 'scalpP'} ...
+    {'style' 'checkbox'   'string' '' 'tag' 'scalp_norm' 'value' 1 'enable' 'off' 'userdata' 'scalpP'}   ...
+    {'style' 'edit'       'string' '1' 'tag' 'scalp_weight' 'enable' 'off' 'userdata' 'scalpP'} ...
+    {'style' 'popupmenu'  'string' scalp_options 'value' 1 'tag' 'scalp_choice' 'enable' 'off' 'userdata' 'scalp' } {} ...
+    {'style' 'checkbox'   'string' 'Absolute values' 'value' 1 'tag'  'scalp_absolute' 'enable' 'off' 'userdata' 'scalp' } {} ...
     {'style' 'checkbox'   'string' '' 'tag' 'ersp_on' 'value' 0 'Callback' set_ersp 'userdata' '1'} ...
 	{'style' 'text'       'string' 'ERSPs' 'horizontalalignment' 'center' } ...
-    {'style' 'edit'       'string' '10' 'tag' 'ersp_PCA' 'enable' 'off' 'userdata' 'erspP'} { }   ...
+    {'style' 'edit'       'string' '10' 'tag' 'ersp_PCA' 'enable' 'off' 'userdata' 'erspP'} ...
+    {'style' 'checkbox'   'string' '' 'tag' 'ersp_norm' 'value' 1 'enable' 'off' 'userdata' 'erspP'}   ...
 	{'style' 'edit'       'string' '1' 'tag' 'ersp_weight' 'enable' 'off' 'userdata' 'erspP'} ...
     {'style' 'text'       'string' 'Time range [ms]' 'tag' 'ersp_time_txt' 'userdata' 'ersp' 'enable' 'off' } ...
 	{'style' 'edit'       'string' str_time 'tag' 'ersp_time_edit' 'userdata' 'ersp' 'enable' 'off' } ...
     {'style' 'text'       'string' 'Freq. range [Hz]' 'tag' 'ersp_time_txt' 'userdata' 'ersp' 'enable' 'off' } ...
 	{'style' 'edit'       'string' str_time 'tag' 'ersp_freq_edit' 'userdata' 'ersp' 'enable' 'off' } ...
-    ...
     {'style' 'checkbox'   'string' '' 'tag' 'itc_on' 'value' 0 'Callback' set_itc 'userdata' '1'} ...
 	{'style' 'text'       'string' 'ITCs' 'horizontalalignment' 'center' } ...
-    {'style' 'edit'       'string' '10' 'tag' 'itc_PCA' 'enable' 'off' 'userdata' 'itcP'} { }   ...
+    {'style' 'edit'       'string' '10' 'tag' 'itc_PCA' 'enable' 'off' 'userdata' 'itcP'} ...
+    {'style' 'checkbox'   'string' '' 'tag' 'itc_norm' 'value' 1 'enable' 'off' 'userdata' 'itcP'}   ...
 	{'style' 'edit'       'string' '1' 'tag' 'itc_weight' 'enable' 'off' 'userdata' 'itcP'} ...
     {'style' 'text'       'string' 'Time range [ms]' 'tag' 'itc_time_txt' 'userdata' 'itcP' 'enable' 'off' } ...
 	{'style' 'edit'       'string' str_time 'tag' 'itc_time_edit' 'userdata' 'itcP' 'enable' 'off' } ...
     {'style' 'text'       'string' 'Freq. range [Hz]' 'tag' 'itc_time_txt' 'userdata' 'itcP' 'enable' 'off' } ...
 	{'style' 'edit'       'string' str_time 'tag' 'itc_freq_edit' 'userdata' 'itcP' 'enable' 'off' } ...
-    ...
-    {'style' 'text'       'string' 'Location-based info      PCA              Weight' 'FontWeight' 'Bold'} ...
-	{'style' 'checkbox'   'string' '' 'tag' 'dipole_on' 'value' 0 'Callback' set_dipole 'userdata' '1'} ...
-	{'style' 'text'       'string' 'dipole locations' 'HorizontalAlignment' 'center' } ...
-	{'style' 'text'       'string' '3' 'enable' 'off' 'userdata' 'dipoleP' } { }  ...
-	{'style' 'edit'       'string' '1' 'tag' 'locations_weight' 'enable' 'off' 'userdata' 'dipoleP'} {} {} {} {} ...
-    ...
-	{'style' 'checkbox'   'string' '' 'tag' 'moment_on' 'value' 0 'Callback' set_moment 'userdata' '1'} ...
-	{'style' 'text'       'string' 'dipole orient.' 'HorizontalAlignment' 'center' } ...
-	{'style' 'text'       'string' '3' 'enable' 'off' 'userdata' 'dipoleM' } { }  ...
-	{'style' 'edit'       'string' '1' 'tag' 'moment_weight' 'enable' 'off' 'userdata' 'dipoleM'} ...
-    {'style' 'text'       'string' 'Amplitude & polarity is ignored'} {} {} {} ...
-    ...
-    {'style' 'checkbox'   'string' '' 'tag' 'scalp_on' 'value' 0 'Callback' set_scalp 'userdata' '1'} ...
-	{'style' 'text'       'string' 'scalp maps' 'HorizontalAlignment' 'center' } ...
-	{'style' 'edit'       'string' '10' 'tag' 'scalp_PCA' 'enable' 'off' 'userdata' 'scalpP'} { }   ...
-    {'style' 'edit'       'string' '1' 'tag' 'scalp_weight' 'enable' 'off' 'userdata' 'scalpP'} ...
-    {'style' 'popupmenu'  'string' scalp_options 'value' 1 'tag' 'scalp_choice' 'enable' 'off' 'userdata' 'scalp' } {} ...
-    {'style' 'checkbox'   'string' 'Absolute values' 'value' 1 'tag'  'scalp_absolute' 'enable' 'off' 'userdata' 'scalp' } {} ...
-    ...
-    {} };
+    {} ...
+    {'style' 'checkbox'   'string' '' 'tag' 'sec_on' 'Callback' set_secpca 'value' 0} ...
+	{'style' 'text'       'string' 'Final dimensions' } ...
+    {'style' 'edit'       'string' '10' 'enable' 'off' 'tag' 'sec_PCA' 'userdata' 'sec' } ...
+	{} {'style' 'pushbutton' 'string' 'Help' 'tag' 'finalDimHelp' 'callback' help_secpca } {} {} {} {} };
   
 
 %    {'link2lines' 'style'  'text'   'string' '' } {} {} {} ...
@@ -243,9 +221,9 @@ if ~ischar(varargin{1}) %intial settings
 
     fig_arg{1} = { ALLEEG STUDY cls };
     geomline = [0.5 2 1 0.5 1 2 1 2 1 ];
-    geometry = { [1] [1] [1 0.2] ...
-                 [3] geomline geomline  geomline geomline [1] geomline [0.5 2 1 0.5 1 5.4 0.2 0.2 0.2 ] [0.5 2 1 0.5 1 2.9 .1 2.9 .1 ] [1] };
-    geomvert = [ 1 1 1 1 1 1 1 1 1 1 1 1 0.5 ];
+    geometry = { [1] [1] [1 1 1] [1] [1] ...
+                 [3] geomline geomline geomline [0.5 2 1 0.5 1 2.9 .1 2.9 .1 ] geomline geomline [1] geomline };
+    geomvert = [ 1 1 3 1 1 1 1 1 1 1 1 1 0.5 1 ];
 
     %if length(show_options) < 3
     %    gui_spec(2:6) = { {} ...
@@ -255,28 +233,36 @@ if ~ischar(varargin{1}) %intial settings
     %        {'style' 'text'       'string'  '(empty=all)'} {} };
     %    geometry{3} = [2.5 0.25 0.4];
     %    geomvert(3) = 1;
-    %end
-    disp('Even though the graphics have changed, this function remains 100% backward compatible.');
+    %end;
+    
 	[preclust_param, userdat2, strhalt, os] = inputgui( 'geometry', geometry, 'uilist', gui_spec, 'geomvert', geomvert, ...
                                                       'helpcom', ' pophelp(''std_preclust'')', ...
                                                       'title', 'Select and compute component measures for later clustering -- pop_preclust()', ...
                                                       'userdata', fig_arg);	
-	if isempty(preclust_param), return; end
+	if isempty(preclust_param), return; end;
     
-    options = { STUDY, ALLEEG, 1};
+    options = { STUDY, ALLEEG };
+    
+    % precluster on what?
+    % -------------------
+    options{3} = cls(os.clus_list); % hierarchical clustering
+
+    %if ~(os.preclust_PCA) %create PCA data for clustering
+    %preclust_command = '[STUDY ALLEEG] = eeg_createdata(STUDY, ALLEEG, ';
+    %end
     
     % Spectrum option is on
     % --------------------
     if os.spectra_on== 1 
-        options{end+1} = {  'spec' 'npca' str2num(os.spectra_PCA) ...
+        options{end+1} = {  'spec' 'npca' str2num(os.spectra_PCA) 'norm' os.spectra_norm ...
                             'weight' str2num(os.spectra_weight)  'freqrange' str2num(os.spectra_freq_edit) };
     end
     
     % ERP option is on
     % ----------------
     if os.erp_on == 1 
-        options{end+1} = { 'erp' 'npca' str2num(os.erp_PCA) ...
-                         'weight' str2num(os.erp_weight) 'timewindow' str2num(os.erp_time_edit), 'erpfilter', os.erp_filter_edit };
+        options{end+1} = { 'erp' 'npca' str2num(os.erp_PCA) 'norm' os.erp_norm ...
+                         'weight' str2num(os.erp_weight) 'timewindow' str2num(os.erp_time_edit) };
     end
     
     % Scalp maps option is on
@@ -287,13 +273,13 @@ if ~ischar(varargin{1}) %intial settings
         else abso = 0;
         end
         if (os.scalp_choice == 2)  %Laplacian scalp maps
-            options{end+1} = { 'scalpLaplac' 'npca' str2num(os.scalp_PCA) ...
+            options{end+1} = { 'scalpLaplac' 'npca' str2num(os.scalp_PCA) 'norm' os.scalp_norm ...
                                'weight' str2num(os.scalp_weight) 'abso' abso };
         elseif (os.scalp_choice == 3)  %Gradient scalp maps
-            options{end+1} = { 'scalpGrad' 'npca' str2num(os.scalp_PCA) ...
+            options{end+1} = { 'scalpGrad' 'npca' str2num(os.scalp_PCA) 'norm' os.scalp_norm, ...
                                'weight' str2num(os.scalp_weight) 'abso' abso };
         elseif (os.scalp_choice == 1) %scalp map case
-            options{end+1} = { 'scalp' 'npca' str2num(os.scalp_PCA) ...
+            options{end+1} = { 'scalp' 'npca' str2num(os.scalp_PCA) 'norm' os.scalp_norm, ...
                                'weight' str2num(os.scalp_weight) 'abso' abso };
         end
     end
@@ -301,32 +287,35 @@ if ~ischar(varargin{1}) %intial settings
     % Dipole option is on
     % -------------------
     if os.dipole_on == 1 
-        options{end+1} = { 'dipoles' 'weight' str2num(os.locations_weight) };
-    end
-    if os.moment_on == 1 
-        options{end+1} = { 'moments' 'weight' str2num(os.moment_weight) };
+        options{end+1} = { 'dipoles' 'norm' os.locations_norm 'weight' str2num(os.locations_weight) };
     end
     
     % ERSP option is on
     % -----------------
     if os.ersp_on  == 1 
         options{end+1} = { 'ersp' 'npca' str2num(os.ersp_PCA) 'freqrange' str2num(os.ersp_freq_edit) ...
-                          'timewindow' str2num(os.ersp_time_edit) 'weight' str2num(os.ersp_weight) };
+                          'timewindow' str2num(os.ersp_time_edit) 'norm' os.ersp_norm 'weight' str2num(os.ersp_weight) };
     end
     
     % ITC option is on 
     % ----------------
     if os.itc_on  == 1 
         options{end+1} = { 'itc' 'npca' str2num(os.itc_PCA) 'freqrange' str2num(os.itc_freq_edit) 'timewindow' ...
-                           str2num(os.itc_time_edit) 'weight' str2num(os.itc_weight) };
+                           str2num(os.itc_time_edit) 'norm' os.itc_norm 'weight' str2num(os.itc_weight) };
     end       
+    
+    % ERSP option is on
+    % -----------------
+    if os.sec_on  == 1 
+        options{end+1} = { 'finaldim' 'npca' str2num(os.sec_PCA) };
+    end
     
     % evaluate command
     % ----------------
     if length(options) == 3
         warndlg2('No measure selected: aborting.'); 
         return; 
-    end
+    end;
     
     [STUDY ALLEEG] = std_preclust(options{:});
     com = sprintf('[STUDY ALLEEG] = std_preclust(STUDY, ALLEEG, %s);', vararg2str(options(3:end)));
@@ -338,7 +327,7 @@ if ~ischar(varargin{1}) %intial settings
 %             [filepath filename ext] = fileparts(os.studyfile);
 %             STUDY.filename = [ filename ext ];
 %             STUDY.filepath = filepath;
-%         end
+%         end;
 %         STUDY = pop_savestudy(STUDY, ALLEEG, 'filename', STUDY.filename, 'filepath', STUDY.filepath);
 %         com = sprintf('%s\nSTUDY = pop_savestudy(STUDY, ALLEEG, %s);',  com, ...
 %                       vararg2str( { 'filename', STUDY.filename, 'filepath', STUDY.filepath }));
@@ -367,21 +356,27 @@ else
             mpclust =  get(findobj('parent', hdl, 'tag', 'mpclust'), 'value');
             if mpclust
                 set(findobj('parent', hdl, 'tag', 'spectra_PCA'), 'visible','off');
+                set(findobj('parent', hdl, 'tag', 'spectra_norm'), 'visible','off');
                 set(findobj('parent', hdl, 'tag', 'spectra_weight'), 'visible','off');
                 set(findobj('parent', hdl, 'tag',  'erp_PCA' ), 'visible','off');
+                set(findobj('parent', hdl, 'tag','erp_norm' ), 'visible','off');
                 set(findobj('parent', hdl, 'tag','erp_weight' ), 'visible','off');
+                set(findobj('parent', hdl, 'tag', 'locations_norm' ), 'visible','off');
                 set(findobj('parent', hdl, 'tag','locations_weight'), 'visible','off');
                 set(findobj('parent', hdl, 'tag', 'scalp_PCA'), 'visible','off');
+                set(findobj('parent', hdl, 'tag','scalp_norm'  ), 'visible','off');
                 set(findobj('parent', hdl, 'tag','scalp_weight'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','ersp_PCA'), 'visible','off');
+                set(findobj('parent', hdl, 'tag', 'ersp_norm'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','ersp_weight' ), 'visible','off');
                 set(findobj('parent', hdl, 'tag', 'itc_PCA'), 'visible','off');
+                set(findobj('parent', hdl, 'tag','itc_norm'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','itc_weight'), 'visible','off');
+
 
                 set(findobj('parent', hdl, 'tag','sec_PCA'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','sec_on'), 'visible','off');
                 set(findobj('parent', hdl, 'userdata' ,'dipoleP'), 'visible','off');
-                set(findobj('parent', hdl, 'userdata' ,'dipoleM'), 'visible','off');
                 set(findobj('parent', hdl, 'string','Final dimensions'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','finalDimHelp' ), 'visible','off');
                 set(findobj('parent', hdl, 'tag','spectra_freq_txt'), 'visible','off');
@@ -391,7 +386,7 @@ else
                 set(findobj('parent', hdl, 'tag','erp_time_txt'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','erp_time_edit'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','scalp_choice'), 'visible','off');
-                set(findobj('parent', hdl, 'tag','scalp_absolute'), 'visible','off');
+                set(findobj('parent', hdl, 'tag', 'scalp_absolute'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','ersp_time_txt'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','ersp_time_edit'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','ersp_freq_edit'), 'visible','off');
@@ -399,24 +394,30 @@ else
                 set(findobj('parent', hdl, 'tag','itc_time_edit'), 'visible','off');
                 set(findobj('parent', hdl, 'tag','itc_freq_edit'), 'visible','off');
 
-                set(findobj('parent', hdl, 'string','Measures                         Dims.   Rel. Wt.'), 'string','Measures');
+                set(findobj('parent', hdl, 'string','Measures                         Dims.   Norm.   Rel. Wt.'), 'string','Measures');
             else
                 set(findobj('parent', hdl, 'tag', 'spectra_PCA'), 'visible','on');
+                set(findobj('parent', hdl, 'tag', 'spectra_norm'), 'visible','on');
                 set(findobj('parent', hdl, 'tag', 'spectra_weight'), 'visible','on');
                 set(findobj('parent', hdl, 'tag',  'erp_PCA' ), 'visible','on');
+                set(findobj('parent', hdl, 'tag','erp_norm' ), 'visible','on');
                 set(findobj('parent', hdl, 'tag','erp_weight' ), 'visible','on');
+                set(findobj('parent', hdl, 'tag', 'locations_norm' ), 'visible','on');
                 set(findobj('parent', hdl, 'tag','locations_weight'), 'visible','on');
                 set(findobj('parent', hdl, 'tag', 'scalp_PCA'), 'visible','on');
+                set(findobj('parent', hdl, 'tag','scalp_norm'  ), 'visible','on');
                 set(findobj('parent', hdl, 'tag','scalp_weight'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','ersp_PCA'), 'visible','on');
+                set(findobj('parent', hdl, 'tag', 'ersp_norm'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','ersp_weight' ), 'visible','on');
                 set(findobj('parent', hdl, 'tag', 'itc_PCA'), 'visible','on');
+                set(findobj('parent', hdl, 'tag','itc_norm'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','itc_weight'), 'visible','on');
+
 
                 set(findobj('parent', hdl, 'tag','sec_PCA'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','sec_on'), 'visible','on');
                 set(findobj('parent', hdl, 'userdata' ,'dipoleP'), 'visible','on');
-                set(findobj('parent', hdl, 'userdata' ,'dipoleM'), 'visible','on');
                 set(findobj('parent', hdl, 'string','Final dimensions'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','finalDimHelp' ), 'visible','on');
                 set(findobj('parent', hdl, 'tag','spectra_freq_txt'), 'visible','on');
@@ -426,7 +427,7 @@ else
                 set(findobj('parent', hdl, 'tag','erp_time_txt'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','erp_time_edit'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','scalp_choice'), 'visible','on');
-                set(findobj('parent', hdl, 'tag','scalp_absolute'), 'visible','on');
+                set(findobj('parent', hdl, 'tag', 'scalp_absolute'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','ersp_time_txt'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','ersp_time_edit'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','ersp_freq_edit'), 'visible','on');
@@ -434,9 +435,9 @@ else
                 set(findobj('parent', hdl, 'tag','itc_time_edit'), 'visible','on');
                 set(findobj('parent', hdl, 'tag','itc_freq_edit'), 'visible','on');
 
-                set(findobj('parent', hdl, 'string','Measures to Cluster on:'), 'string','Load                                  Dims.   Rel. Wt.');
-                set(findobj('parent', hdl, 'string','Measures'), 'string', 'Measures                         Dims.   Rel. Wt.');
-            end
+                set(findobj('parent', hdl, 'string','Measures to Cluster on:'), 'string','Load                                  Dims.   Norm.   Rel. Wt.');
+                set(findobj('parent', hdl, 'string','Measures'), 'string', 'Measures                         Dims.   Norm.   Rel. Wt.');
+            end;
 
                 
 %             set_mpcluster =  get(findobj('parent', hdl, 'tag', 'spectra_on'), 'value'); 
@@ -477,15 +478,6 @@ else
            else
                set(findobj('parent', hdl, 'userdata', 'dipoleP'), 'enable', fastif(set_dipole,'on','off'));
            end
-        case 'setmoment'
-            moment_on =  get(findobj('parent', hdl, 'tag', 'moment_on'), 'value'); 
-            set(findobj('parent', hdl, 'userdata', 'moment'), 'enable', fastif(moment_on,'on','off'));
-            PCA_on = get(findobj('parent', hdl, 'tag', 'preclust_PCA'), 'value');
-            if PCA_on
-               set(findobj('parent', hdl, 'userdata', 'dipoleM'), 'enable','off');
-           else
-               set(findobj('parent', hdl, 'userdata', 'dipoleM'), 'enable', fastif(moment_on,'on','off'));
-           end
         case 'setersp'
             set_ersp =  get(findobj('parent', hdl, 'tag', 'ersp_on'), 'value'); 
             set(findobj('parent', hdl,'userdata', 'ersp'), 'enable', fastif(set_ersp,'on','off'));
@@ -498,7 +490,7 @@ else
             set_itc =  get(findobj('parent', hdl, 'tag', 'itc_on'), 'value'); 
             set(findobj('parent', hdl,'tag', 'ersp_push'), 'enable', fastif(set_itc,'off','on'));
             set(findobj('parent', hdl,'tag', 'ersp_params'), 'enable', fastif(set_itc,'off','on'));
-             if  (set_itc && (~set_ersp) )
+             if  (set_itc & (~set_ersp) )
                 set(findobj('parent', hdl,'tag', 'itc_push'), 'enable', 'on');
                 set(findobj('parent', hdl,'tag', 'itc_params'), 'enable', 'on');
             end
@@ -514,7 +506,7 @@ else
             set_ersp = get(findobj('parent', hdl, 'tag', 'ersp_on'), 'value'); 
             set(findobj('parent', hdl,'tag', 'itc_push'), 'enable', fastif(set_ersp,'off','on'));
             set(findobj('parent', hdl,'tag', 'itc_params'), 'enable', fastif(set_ersp,'off','on'));
-            if  (set_ersp && (~set_itc) )
+            if  (set_ersp & (~set_itc) )
                 set(findobj('parent', hdl,'tag', 'ersp_push'), 'enable', 'on');
                 set(findobj('parent', hdl,'tag', 'ersp_params'), 'enable', 'on');
             end
@@ -554,17 +546,17 @@ else
        case 'preclustOK'
            set_PCA =  get(findobj('parent', hdl, 'tag', 'preclust_PCA'), 'value'); 
            set_ersp =  get(findobj('parent', hdl, 'tag', 'ersp_on'), 'value'); 
-           set(findobj('parent', hdl,'userdata', 'erspP'), 'enable', fastif(~set_PCA && set_ersp,'on','off'));
+           set(findobj('parent', hdl,'userdata', 'erspP'), 'enable', fastif(~set_PCA & set_ersp,'on','off'));
            set_itc =  get(findobj('parent', hdl, 'tag', 'itc_on'), 'value'); 
-           set(findobj('parent', hdl,'userdata', 'itcP'), 'enable', fastif(~set_PCA && set_itc,'on','off'));
+           set(findobj('parent', hdl,'userdata', 'itcP'), 'enable', fastif(~set_PCA & set_itc,'on','off'));
            set_erp =  get(findobj('parent', hdl, 'tag', 'erp_on'), 'value'); 
-           set(findobj('parent', hdl,'userdata', 'erpP'), 'enable', fastif(~set_PCA && set_erp,'on','off'));
+           set(findobj('parent', hdl,'userdata', 'erpP'), 'enable', fastif(~set_PCA & set_erp,'on','off'));
            set_spec =  get(findobj('parent', hdl, 'tag', 'spectra_on'), 'value'); 
-           set(findobj('parent', hdl,'userdata', 'specP'), 'enable', fastif(~set_PCA && set_spec,'on','off'));
+           set(findobj('parent', hdl,'userdata', 'specP'), 'enable', fastif(~set_PCA & set_spec,'on','off'));
            set_scalp =  get(findobj('parent', hdl, 'tag', 'scalp_on'), 'value'); 
-           set(findobj('parent', hdl,'userdata', 'scalpP'), 'enable', fastif(~set_PCA && set_scalp,'on','off'));
+           set(findobj('parent', hdl,'userdata', 'scalpP'), 'enable', fastif(~set_PCA & set_scalp,'on','off'));
            set_dipole =  get(findobj('parent', hdl, 'tag', 'dipole_on'), 'value'); 
-           set(findobj('parent', hdl,'userdata', 'dipoleP'), 'enable', fastif(~set_PCA && set_dipole,'on','off'));
+           set(findobj('parent', hdl,'userdata', 'dipoleP'), 'enable', fastif(~set_PCA & set_dipole,'on','off'));
            set(findobj('parent', hdl,'tag', 'chosen_component'), 'enable', fastif(~set_PCA,'on','off'));
            set(findobj('parent', hdl,'tag', 'dipole_rv'), 'enable', fastif(~set_PCA,'on','off'));
            set(findobj('parent', hdl,'tag', 'compstd_str'), 'enable', fastif(~set_PCA,'on','off'));

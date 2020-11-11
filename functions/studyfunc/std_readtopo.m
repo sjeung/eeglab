@@ -34,30 +34,19 @@
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, October 11, 2004, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [X, yi, xi ] = std_readtopo(ALLEEG, abset, comps, option, mode)
 
@@ -66,13 +55,13 @@ yi = [];
 xi = [];
 if nargin < 4
     option = 'none';
-end
+end;
 if nargin < 5
     mode = '2Dmap';
-end
-filename = correctfile(fullfile( ALLEEG(abset).filepath,[ ALLEEG(abset).filename(1:end-3) 'icatopo']),ALLEEG(abset).filepath);
+end;
+filename = correctfile(fullfile( ALLEEG(abset).filepath,[ ALLEEG(abset).filename(1:end-3) 'icatopo']));
 tmpfile  = which(filename);
-if ~isempty(tmpfile), filename = tmpfile; end
+if ~isempty(tmpfile), filename = tmpfile; end;
 
 % 061411, 2:51pm
 % Modified by Joaquin
@@ -82,12 +71,12 @@ while getfield(dir(filename), 'bytes') < 5000
     topo = load( '-mat', filename);
     filename = correctfile(topo.file, ALLEEG(abset).filepath);
     tmpfile  = which(filename);
-    if ~isempty(tmpfile), filename = tmpfile; end
+    if ~isempty(tmpfile), filename = tmpfile; end;
     if(i>100) 
         error('too many attempts to find valid icatopo');
     end
     i = i+1;
-end
+end;
 
 for k = 1:length(comps)
 
@@ -99,20 +88,20 @@ for k = 1:length(comps)
                          [ 'comp' int2str(comps(k)) '_y'] );
         catch
             error( [ 'Cannot read file ''' filename '''' ]);
-        end
+        end;
     elseif k == 1
         try
             topo = load( '-mat', filename);
         catch
             error([ 'Missing scalp topography file - also necessary for ERP polarity' 10 'Try recomputing scalp topographies for components' ]);
-        end
-    end
+        end;
+    end;
     
     try,
         tmp =  getfield(topo, [ 'comp' int2str(comps(k)) '_grid' ]);
     catch,
         error([ 'Empty scalp topography file - also necessary for ERP polarity' 10 'Try recomputing scalp topographies for components' ]);
-    end
+    end;
         
     if strcmpi(option, 'gradient')
         [tmpx, tmpy]  = gradient(tmp); % Gradient
@@ -120,11 +109,11 @@ for k = 1:length(comps)
         tmp(:,:,2) = tmpy;
     elseif strcmpi(option, 'laplacian')
         tmp = del2(tmp); % Laplacian
-    end
+    end;
 
-    if length(comps) > 1 || strcmpi(mode, 'preclust')
+    if length(comps) > 1 | strcmpi(mode, 'preclust')
         tmp = tmp(find(~isnan(tmp))); % remove NaN for more than 1 component
-    end
+    end;
     if k == 1
         X = zeros([ length(comps) size(tmp) ]) ;
     end
@@ -132,7 +121,7 @@ for k = 1:length(comps)
     if k == 1 
         yi   = getfield(topo, [ 'comp' int2str(comps(k)) '_y']);
         xi   = getfield(topo, [ 'comp' int2str(comps(k)) '_x']);
-    end
+    end;
 end
 X = squeeze(X);
 
@@ -140,10 +129,10 @@ return;
 
 function filename = correctfile(filename, datasetpath)
     comp = computer;
-    if filename(2) == ':' && ~strcmpi(comp(1:2), 'PC') 
+    if filename(2) == ':' & ~strcmpi(comp(1:2), 'PC') 
         filename = [filesep filename(4:end) ];
         filename(find(filename == '\')) = filesep;
-    end
+    end;
     
     if ~exist(filename)
         [tmpp tmpf ext] = fileparts(filename);
@@ -156,9 +145,9 @@ function filename = correctfile(filename, datasetpath)
             else
                 filename = fullfile(datasetpath, [ tmpf ext ]);
                 if ~exist(filename)
-                    error([ 'Cannot load file ''' [ tmpf ext ] '''' 10 'Go back and recompute the data file.' 10 'Note that plotting ICA component ERPs require' 10 'to precompute ICA topographies (see tutorial)']);
-                end
-            end
-        end
+                    error([ 'Cannot load file ''' [ tmpf ext ] '''' ]);
+                end;
+            end;
+        end;
     end;        
     

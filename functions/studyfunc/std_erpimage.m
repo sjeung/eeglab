@@ -34,7 +34,7 @@
 %                  statistics (the 'on' options does not allow statistics).
 %   'smoothing'  - Smoothing parameter (number of trials). {Default: 10}
 %                  erpimage() equivalent: 'avewidth'
-%   'nlines'     - Number of lines for ERPimage. erpimage() equivalent is 
+%   'nlines'     - Number of lines for ERPimage. erpaimge() equivalent is 
 %                  'decimate'. Note that this parameter must be larger than
 %                  the minimum number of trials in each design cell 
 %                  {Default: 10}
@@ -57,32 +57,21 @@
 
 % Copyright (C) 2011 Arnaud Delorme
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function allerpimage = std_erpimage( EEG, varargin)
+function allerpimage = std_erpimage( EEG, varargin);
 
 if nargin < 1
     help std_erpimage;
@@ -90,7 +79,7 @@ if nargin < 1
 end
 
 allerpimage = [];
-[opt, moreopts] = finputcheck( varargin, { ...
+[opt moreopts] = finputcheck( varargin, { ...
     'components'    'integer'     []                    [];
     'channels'      { 'cell','integer' }  { [] [] }     {};
     'trialindices' { 'integer','cell' }   []            [];
@@ -104,29 +93,25 @@ allerpimage = [];
     'sorttype'       ''           {}                    '';
     'sortwin'        ''           {}                    [];
     'sortfield'      ''           {}                    'latency';
-    'concatenate'   'string'      { 'on'  }             'on';
-    'trialinfo'     'struct'      []                    struct([]);
-    'savetrials'    'string'      { 'on','off' }        'on'; % obsolete (never used)
+    'concatenate'   'string'      { 'on','off' }        'off';
     'erpimageopt'   'cell'        {}                    {}}, ...
     'std_erpimage', 'ignore');
-if ischar(opt), error(opt); end
-if length(EEG) == 1 && isempty(opt.trialindices), opt.trialindices = { [1:EEG.trials] }; end
-if isempty(opt.trialindices), opt.trialindices = cell(length(EEG)); end
-if ~iscell(opt.trialindices), opt.trialindices = { opt.trialindices }; end
-if isempty(opt.channels)
-    if isfield(EEG,'icaweights')
-        numc = size(EEG(1).icaweights,1);
-    else
-        error('EEG.icaweights not found');
-    end
-    if isempty(opt.components)
-        opt.components = 1:numc;
-    end
+if isstr(opt), error(opt); end;
+if length(EEG) == 1 && isempty(opt.trialindices), opt.trialindices = { [1:EEG.trials] }; end;
+if isempty(opt.trialindices), opt.trialindices = cell(length(EEG)); end;
+if ~iscell(opt.trialindices), opt.trialindices = { opt.trialindices }; end;
+if isfield(EEG,'icaweights')
+    numc = size(EEG(1).icaweights,1);
+else
+    error('EEG.icaweights not found');
+end
+if isempty(opt.components)
+    opt.components = 1:numc;
 end
 
 % filename
 % --------
-if isempty(opt.fileout), opt.fileout = fullfile(EEG(1).filepath, EEG(1).filename(1:end-4)); end
+if isempty(opt.fileout), opt.fileout = fullfile(EEG(1).filepath, EEG(1).filename(1:end-4)); end;
 if ~isempty(opt.channels)
     filenameshort = [ opt.fileout '.daterpim'];
     prefix = 'chan';
@@ -138,23 +123,23 @@ if ~isempty(opt.channels)
             for ind = 2:length(EEG)
                 if ~isequal(eeg_chaninds(EEG(ind), opt.channels, 0), opt.indices)
                     error([ 'Channel information must be consistant when ' 10 'several datasets are merged for a specific design' ]);
-                end
-            end
-        end
+                end;
+            end;
+        end;
     else
         opt.indices = opt.channels;
-    end
+    end;
 else
     opt.indices = opt.components;
     filenameshort = [ opt.fileout '.icaerpim'];
     prefix = 'comp';
-end
+end;
 filename = filenameshort;
 
 % ERP information found in datasets
 % ---------------------------------
 if exist(filename) && strcmpi(opt.recompute, 'off')
-    fprintf('Use existing file for ERSP: %s; check the ''recompute checkbox'' to force recomputing.\n', filenameshort);
+    fprintf('File "%s" found on disk, no need to recompute\n', filenameshort);
     return;
 end
 
@@ -165,24 +150,24 @@ if strcmpi(opt.concatenate, 'off')
     if isempty(opt.channels)
          X = eeg_getdatact(EEG, 'component', opt.indices, 'trialindices', opt.trialindices );
     else X = eeg_getdatact(EEG, 'channel'  , opt.indices, 'trialindices', opt.trialindices, 'rmcomps', opt.rmcomps, 'interp', opt.interp);
-    end
+    end;
     if ~isempty(opt.sorttype)
          events = eeg_getepochevent(EEG, 'type', opt.sorttype, 'timewin', opt.sortwin, 'fieldname', opt.sortfield, 'trials', opt.trialindices);
     else events = [];
-    end
+    end;
         
     % reverse engeeneering the number of lines for ERPimage
     finallines = opt.nlines;
     if ~isempty(events)
          if all(isnan(events))
              error('Cannot sort trials for one of the dataset');
-         end
+         end;
          lastx  = sum(~isnan(events));
     else lastx  = size(X,3);
-    end
+    end;
     if lastx < finallines + floor((opt.smoothing-1)/2) + 3
         error('The default number of ERPimage lines is too large for one of the dataset');
-    end
+    end;
     firstx = 1;
     xwidth = opt.smoothing;
     %xadv   = lastx/finallines;
@@ -203,56 +188,51 @@ if strcmpi(opt.concatenate, 'off')
                     
                     if nout ~= noutreal
                         error('Wrong conversion 2');
-                    end
+                    end;
                     
-                end
-            end
-        end
-    end
+                end;
+            end;
+        end;
+    end;
     
     clear tmperpimage eventvals;
-    for index = 1:size(X,1)
-        [tmpX, tmpevents] = erpimage(squeeze(X(index,:,:)), events, EEG(1).times, '', opt.smoothing, nlines, 'noplot', 'on', opt.erpimageopt{:}, moreopts{:});
-        if isempty(events), tmpevents = []; end
+    parfor index = 1:size(X,1)
+        [tmpX tmpevents] = erpimage(squeeze(X(index,:,:)), events, EEG(1).times, '', opt.smoothing, nlines, 'noplot', 'on', opt.erpimageopt{:}, moreopts{:});
+        if isempty(events), tmpevents = []; end;
         eventvals{index}   = tmpevents;
         tmperpimage{index} = tmpX';
-    end
+    end;
     allerpimage.events = eventvals{1};
     for index = 1:size(X,1)
         allerpimage.([ prefix int2str(opt.indices(index)) ]) = tmperpimage{index};
-    end
+    end;
 else
     % generate dynamic loading commands
     % ---------------------------------
     for dat = 1:length(EEG)
-        filenames{dat} = fullfile(EEG(dat).filepath, EEG(dat).filename);
-    end
+        filenames{dat} = fullfile(EEG(1).filepath, EEG(1).filename);
+    end;
     allerpimage.times = EEG(1).times;
     for index = 1:length(opt.indices)
         if ~isempty(opt.channels)
              com = sprintf('squeeze(eeg_getdatact(%s, ''interp'', chanlocsforinterp));', vararg2str( { filenames 'channel'  , opt.indices(index), 'rmcomps', opt.rmcomps, 'trialindices', opt.trialindices } ));
         else com = sprintf('squeeze(eeg_getdatact(%s));', vararg2str( { filenames 'component', opt.indices(index), 'trialindices', opt.trialindices } ));
-        end
+        end;
         allerpimage = setfield(allerpimage, [ prefix int2str(opt.indices(index)) ], com);
-    end
-    if ~isempty(opt.channels)
-        com = sprintf('squeeze(eeg_getdatact(%s, ''interp'', chanlocsforinterp));', vararg2str( { filenames 'rmcomps', opt.rmcomps, 'trialindices', opt.trialindices } ));
-        allerpimage = setfield(allerpimage, [ prefix 'all' ], com);
-    end
+    end;
     allerpimage = setfield(allerpimage, 'chanlocsforinterp', opt.interp);
     if ~isempty(opt.sorttype)
          events = eeg_getepochevent(EEG, 'type', opt.sorttype, 'timewin', opt.sortwin, 'fieldname', opt.sortfield, 'trials', opt.trialindices);
          %geteventcom = sprintf('eeg_getepochevent(%s);', vararg2str( { filenames 'type', opt.sorttype, 'timewin', opt.sortwin, 'fieldname', opt.sortfield } ));
     else events = [];
-    end
+    end;
     allerpimage = setfield(allerpimage, 'events', events);
-end
+end;
 allerpimage.times       = EEG(1).times;
 allerpimage.parameters  = varargin;
 allerpimage.datatype    = 'ERPIMAGE';
 allerpimage.datafiles   = computeFullFileName( { EEG.filepath }, { EEG.filename });
 allerpimage.datatrials  = opt.trialindices;
-allerpimage.trialinfo   = opt.trialinfo;
 
 % Save ERPimages in file (all components or channels)
 % ----------------------------------------------
@@ -263,12 +243,12 @@ if strcmpi(opt.savefile, 'on')
         tmpchanlocs = EEG(1).chanlocs;
         allerpimage.labels = opt.channels;
         std_savedat(filename, allerpimage);
-    end
-end
+    end;
+end;
 
 % compute full file names
 % -----------------------
-function res = computeFullFileName(filePaths, fileNames)
+function res = computeFullFileName(filePaths, fileNames);
 for index = 1:length(fileNames)
     res{index} = fullfile(filePaths{index}, fileNames{index});
-end
+end;

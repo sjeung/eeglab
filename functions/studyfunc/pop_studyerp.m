@@ -13,30 +13,19 @@
 
 % Copyright (C) 15 Feb 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [STUDY ALLEEG com ] = pop_studyerp;
 
@@ -65,7 +54,7 @@ optiongui = { 'geometry', guigeom, 'uilist'  , guispec, ...
 STUDY  = [];
 ALLEEG = [];
 com = '';
-if isempty(result), return; end
+if isempty(result), return; end;
 
 nSubjects = str2num(outstruct.subjects);
 nConds    = str2num(outstruct.cond);
@@ -85,10 +74,10 @@ guigeom{end+1} = [];
 for icond = 1:nConds
     if icond == 1, guigeom{end} = [ guigeom{end} 1 0.2];
     else           guigeom{end} = [ guigeom{end} 0.1 1 0.2];
-    end
-    if icond > 1, guispec{end+1} = {}; end
+    end;
+    if icond > 1, guispec{end+1} = {}; end;
     guispec = { guispec{:}, {'style' 'text' 'string' [ 'Condition ' num2str(icond) ' name'] } {} };
-end
+end;
 
 % edit boxes for conditions
 % -------------------------
@@ -96,10 +85,10 @@ guigeom{end+1} = [];
 for icond = 1:nConds
     if icond == 1, guigeom{end} = [ guigeom{end} 1 0.2];
     else           guigeom{end} = [ guigeom{end} 0.1 1 0.2];
-    end
-    if icond > 1, guispec{end+1} = {}; end
+    end;
+    if icond > 1, guispec{end+1} = {}; end;
     guispec = { guispec{:}, {'style' 'edit' 'string' '' 'tag' [ 'cond' num2str(icond) ] } {} };
-end
+end;
 guispec{end+1} = {};
 guigeom{end+1} = [1];
 
@@ -109,10 +98,10 @@ guigeom{end+1} = [];
 for icond = 1:nConds
     if icond == 1, guigeom{end} = [ guigeom{end} 1 0.2];
     else           guigeom{end} = [ guigeom{end} 0.1 1 0.2];
-    end
-    if icond > 1, guispec{end+1} = {}; end
+    end;
+    if icond > 1, guispec{end+1} = {}; end;
     guispec = { guispec{:}, {'style' 'text' 'string' ['Condition ' num2str(icond) ' datasets' ] } {} };
-end
+end;
 
 % create edit boxes
 % -----------------
@@ -121,18 +110,18 @@ for index = 1:nSubjects
     for icond = 1:nConds
         if icond == 1, guigeom{end} = [ guigeom{end} 1 0.2];
         else           guigeom{end} = [ guigeom{end} 0.1 1 0.2];
-        end
+        end;
         select_com = ['[inputname, inputpath] = uigetfile2(''*.set;*.SET'', ''Choose dataset to add to STUDY -- pop_study()'');'...
                       'if inputname ~= 0,' ...
                       '   guiind = findobj(''parent'', gcbf, ''tag'', ''set' int2str(icond) '_' int2str(index) ''');' ...
                       '   set( guiind,''string'', fullfile(inputpath, inputname));' ...
                       'end; clear inputname inputpath;'];
-        if icond > 1, guispec{end+1} = {}; end
+        if icond > 1, guispec{end+1} = {}; end;
         guispec = { guispec{:}, ...
                 {'style' 'edit'       'string' ''    'tag' [ 'set' int2str(icond) '_' int2str(index) ] }, ...
                 {'style' 'pushbutton' 'string' '...' 'Callback' select_com } };
-    end
-end
+    end;
+end;
 
 % last text
 % ---------
@@ -145,7 +134,7 @@ optiongui = { 'geometry', guigeom, ...
               'helpcom' , 'pophelp(''pop_studyerp'')', ...
               'title'   , 'Create a new STUDY set -- pop_studyerp()' };
 [result, userdat2, strhalt, outstruct] = inputgui(optiongui{:});    
-if isempty(result), return; end
+if isempty(result), return; end;
 
 % decode outstruct and build call to std_editset
 % ----------------------------------------------
@@ -157,7 +146,7 @@ for icond = 1:nConds
     tagCond = ['cond' int2str(icond) ];
     if isempty(outstruct.(tagCond))
         outstruct.(tagCond) = [ 'condition ' int2str(icond) ];
-    end
+    end;
     
     for index = 1:nSubjects
         tagSet  = [ 'set' int2str(icond) '_' int2str(index) ];
@@ -165,19 +154,19 @@ for icond = 1:nConds
 
         if ~isempty(outstruct.(tagSet))
             commands = { commands{:}, {'index' nConds*index+icond-1 'load' outstruct.(tagSet)  'subject' subject 'condition' outstruct.(tagCond) } };
-        end
-    end
-end
+        end;
+    end;
+end;
 options = { options{:}, 'commands', commands };
 
 % call std_editset to create the STUDY
 % ------------------------------------
 com1 = sprintf( '[STUDY ALLEEG] = std_editset( STUDY, ALLEEG, %s );', vararg2str(options) );
 [STUDY ALLEEG] = std_editset(STUDY, ALLEEG, options{:});
-if exist(fullfile(ALLEEG(1).filepath, [ALLEEG(1).filename(1:end-4) '.daterp' ]))
+if exist([ STUDY.design(STUDY.currentdesign).cell(1).filebase '.daterp' ])
     textmsg = [ 'WARNING: SOME ERP DATAFILES ALREADY EXIST, OVERWRITE THEM?' 10 ...
-                '(the recomputed files will be identical to the existing ones, unless you modified the EEG' 10 ...
-                'datasets or set a different ERP baseline using menu item STUDY > Precompute channel measures).' ];
+                '(if you have another STUDY using the same datasets, it might overwrite its' 10 ...
+                'precomputed data files. Instead, use a single STUDY and create multiple designs).' ];
     res = questdlg2(textmsg, 'Precomputed datafiles already present on disk', 'No', 'Yes', 'Yes');
     if strcmpi(res, 'No')
         error('User aborded precomputing ERPs');

@@ -32,9 +32,6 @@
 %  "subject"             - [edit box] subject code associated with the dataset. If no 
 %                          subject code is provided, each dataset will assumed to be from 
 %                          a different subject {default: 'S1', 'S2', ..., 'Sn'}
-%  "run"                 - [edit box] dataset run. If no run information is
-%                          provided, all datasets that belong to one subject are assumed to
-%                          have been recorded within one run {default: []}
 %  "session"             - [edit box] dataset session. If no session information is
 %                          provided, all datasets that belong to one subject are assumed to
 %                          have been recorded within one session {default: []}
@@ -53,30 +50,19 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, July 22, 2005, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 % Coding notes: Useful information on functions and global variables used.
 
@@ -92,18 +78,18 @@ end
 % type of call (gui, script or internal)
 % --------------------------------------
 mode = 'internal_command';
-if ~ischar(STUDY) %initial settings
+if ~isstr(STUDY) %initial settings
     mode = 'script';
     if nargin > 2
         for index = 1:length(varargin)
-            if ischar(varargin{index})
+            if isstr(varargin{index})
                 if strcmpi(varargin{index}, 'gui')
                     mode = 'gui';
-                end
-            end
-        end
-    end
-end
+                end;
+            end;
+        end;
+    end;
+end;
 
 if isempty(STUDY)
     newstudy       = 1;
@@ -115,10 +101,10 @@ if isempty(STUDY)
     STUDY.history = 'STUDY = [];';
 else
     newstudy       = 0;
-end
+end;
 
 if strcmpi(mode, 'script') % script mode
-    [STUDY, ALLEEG] = std_editset(STUDY, ALLEEG, varargin{:});
+    [STUDY ALLEEG] = std_editset(STUDY, ALLEEG, varargin{:});
     return;
 elseif strcmpi(mode, 'gui') % GUI mode
     % show warning if necessary
@@ -128,13 +114,10 @@ elseif strcmpi(mode, 'gui') % GUI mode
             res = questdlg2( strvcat('Datasets currently loaded will be removed from EEGLAB memory.', ...
                                      'Are you sure you want to continue?'), ...
                                      'Discard loaded EEGLAB datasets?', 'Cancel', 'Yes', 'Yes');
-            if strcmpi(res, 'cancel'), return; end
-        end
+            if strcmpi(res, 'cancel'), return; end;
+        end;
         ALLEEG = [];
-        alleegEmpty = 1;
-    else
-        alleegEmpty = 0;
-    end
+    end;
     
     % set initial datasetinfo
     % -----------------------
@@ -142,21 +125,20 @@ elseif strcmpi(mode, 'gui') % GUI mode
         datasetinfo = STUDY.datasetinfo;
         different = 0;
         for k = 1:length(ALLEEG)
-            if ~strcmpi(datasetinfo(k).filename, ALLEEG(k).filename), different = 1; break; end
-            if ~strcmpi(datasetinfo(k).subject,   ALLEEG(k).subject),   different = 1; break; end
-            if ~strcmpi(datasetinfo(k).condition, ALLEEG(k).condition), different = 1; break; end
-            if ~strcmpi(char(datasetinfo(k).group), char(ALLEEG(k).group)),     different = 1; break; end       
-            if ~isequal(datasetinfo(k).session, ALLEEG(k).session),             different = 1; break; end
-            if ~isequal(datasetinfo(k).run, ALLEEG(k).run),                     different = 1; break; end
+            if ~strcmpi(datasetinfo(k).filename, ALLEEG(k).filename), different = 1; break; end;
+            if ~strcmpi(datasetinfo(k).subject,   ALLEEG(k).subject),   different = 1; break; end;
+            if ~strcmpi(datasetinfo(k).condition, ALLEEG(k).condition), different = 1; break; end;
+            if ~strcmpi(char(datasetinfo(k).group), char(ALLEEG(k).group)),     different = 1; break; end;              
+            if datasetinfo(k).session ~= ALLEEG(k).session,             different = 1; break; end;
         end
         if different
             info = 'from_STUDY_different_from_ALLEEG';
         else
             info = 'from_STUDY';
-        end
+        end;
         if ~isfield(datasetinfo, 'comps');
             datasetinfo(1).comps = [];
-        end
+        end;
     else
         info = 'from_ALLEEG';
         if length(ALLEEG) > 0
@@ -164,7 +146,6 @@ elseif strcmpi(mode, 'gui') % GUI mode
             datasetinfo(length(ALLEEG)).filepath  = [];
             datasetinfo(length(ALLEEG)).subject   = [];
             datasetinfo(length(ALLEEG)).session   = [];
-            datasetinfo(length(ALLEEG)).run       = [];
             datasetinfo(length(ALLEEG)).condition = [];
             datasetinfo(length(ALLEEG)).group     = [];     
             for k = 1:length(ALLEEG)
@@ -172,17 +153,16 @@ elseif strcmpi(mode, 'gui') % GUI mode
                 datasetinfo(k).filepath  = ALLEEG(k).filepath;   
                 datasetinfo(k).subject   = ALLEEG(k).subject;
                 datasetinfo(k).session   = ALLEEG(k).session;
-                datasetinfo(k).run       = ALLEEG(k).run;
                 datasetinfo(k).condition = ALLEEG(k).condition;
                 datasetinfo(k).group     = ALLEEG(k).group;                    
             end
             if ~isfield(datasetinfo, 'comps');
                 datasetinfo(1).comps = [];
-            end
+            end;
         else
             datasetinfo = [];
-        end
-    end
+        end;
+    end;
 
     nextpage    = 'pop_study(''nextpage'', gcbf);';
     prevpage    = 'pop_study(''prevpage'', gcbf);';
@@ -191,7 +171,6 @@ elseif strcmpi(mode, 'gui') % GUI mode
     loadsetedit = [ 'guiind = gcbo;' loadset ];
     subcom      = 'pop_study(''subject''  , gcbf, get(gcbo, ''userdata''), get(gcbo, ''string''));';
     sescom      = 'pop_study(''session''  , gcbf, get(gcbo, ''userdata''), get(gcbo, ''string''));';
-    runcom      = 'pop_study(''run''      , gcbf, get(gcbo, ''userdata''), get(gcbo, ''string''));';
     condcom     = 'pop_study(''condition'', gcbf, get(gcbo, ''userdata''), get(gcbo, ''string''));';
     grpcom      = 'pop_study(''group''    , gcbf, get(gcbo, ''userdata''), get(gcbo, ''string''));';
     compcom     = 'pop_study(''component'', gcbf, get(gcbo, ''userdata''), get(gcbo, ''string''));';
@@ -216,20 +195,17 @@ elseif strcmpi(mode, 'gui') % GUI mode
         {} ...
         {'style' 'text' 'string' 'dataset filename' 'userdata' 'addt'} {'style' 'text' 'string' 'browse' 'userdata' 'addt'} ...
         {'style' 'text' 'string' 'subject'    'userdata' 'addt'} ...
-        {'style' 'text' 'string' 'run'        'userdata' 'addt'} ...
         {'style' 'text' 'string' 'session'    'userdata' 'addt'} ...
         {'style' 'text' 'string' 'condition'  'userdata' 'addt'} ...
         {'style' 'text' 'string' 'group'      'userdata' 'addt'} ...
         {'style' 'pushbutton' 'string' 'Select by r.v.' 'userdata' 'addt' 'callback' cb_dipole } ...
         {} };
-    geomUnit  = [0.2 1 3.5];
-    geomUnit2 = [0.2 1.05 0.35 0.4 0.25 0.35 0.6 0.4 0.6 0.3];
-	guigeom = { [1] geomUnit geomUnit geomUnit [1] geomUnit2 };
+	guigeom = { [1] [0.2 1 3.5] [0.2 1 3.5] [0.2 1 3.5] [1] [0.2 1.05 0.35 0.4 0.35 0.6 0.4 0.6 0.3]};
 	
     % create edit boxes
     % -----------------
     for index = 1:10
-        guigeom = { guigeom{:} geomUnit2 };
+        guigeom = { guigeom{:} [0.2 1 0.2 0.5 0.2 0.5 0.5 0.5 0.3] };
         select_com = ['[inputname, inputpath] = uigetfile2(''*.set;*.SET'', ''Choose dataset to add to STUDY -- pop_study()'');'...
                       'if inputname ~= 0,' ...
                       '   guiind = findobj(''parent'', gcbf, ''tag'', ''set' int2str(index) ''');' ...
@@ -242,13 +218,12 @@ elseif strcmpi(mode, 'gui') % GUI mode
         {'style' 'edit'       'string' ''      'tag' [ 'set'   int2str(index) ] 'userdata' index 'callback' loadsetedit}, ...
         {'style' 'pushbutton' 'string' '...'   'tag' [ 'brw'   int2str(index) ] 'userdata' index 'Callback' select_com}, ...
         {'style' 'edit'       'string' ''      'tag' [ 'sub'   int2str(index) ] 'userdata' index 'Callback' subcom}, ...
-        {'style' 'edit'       'string' ''      'tag' [ 'run'   int2str(index) ] 'userdata' index 'Callback' runcom}, ...
         {'style' 'edit'       'string' ''      'tag' [ 'sess'  int2str(index) ] 'userdata' index 'Callback' sescom}, ...
         {'style' 'edit'       'string' ''      'tag' [ 'cond'  int2str(index) ] 'userdata' index 'Callback' condcom}, ...
         {'style' 'edit'       'string' ''      'tag' [ 'group' int2str(index) ] 'userdata' index 'Callback' grpcom}, ...
         {'style' 'pushbutton' 'string' 'All comp.'   'tag' [ 'comps' int2str(index) ] 'userdata' index 'Callback' compcom}, ...
         {'style' 'pushbutton' 'string' 'CLear' 'tag' [ 'clear' int2str(index) ] 'userdata' index 'callback' delset} };
-    end
+    end;
     
     if strcmpi(info, 'from_STUDY_different_from_ALLEEG')
         text1    = 'Dataset info (condition, group, ...) differs from study info. [set] = Overwrite dataset info for each dataset on disk.';
@@ -256,7 +231,7 @@ elseif strcmpi(mode, 'gui') % GUI mode
     else
         text1    = 'Update dataset info - datasets stored on disk will be overwritten (unset = Keep study info separate).';
         value_cb = 1;
-    end
+    end;
     guispec = { guispec{:}, ...
                 {'style' 'text'       'string'  'Important note: Removed datasets will not be saved before being deleted from EEGLAB memory' }, ...
                 {}, ...
@@ -275,7 +250,7 @@ elseif strcmpi(mode, 'gui') % GUI mode
 %         guispec{end-2} = {'style' 'text'     'string' 'Re-save STUDY. Uncheck and use menu File > Save study as to save under a new filename'};
 %         guispec(end-1) = [];
 %         guigeom{end-1} = [0.14 3];
-%     end
+%     end;
 	
     fig_arg{1} = ALLEEG;      % datasets         
     fig_arg{2} = datasetinfo; % datasetinfo
@@ -293,42 +268,42 @@ elseif strcmpi(mode, 'gui') % GUI mode
                   'userdata', fig_arg, ...
                   'eval'    , 'pop_study(''delclust'', gcf); pop_study(''redraw'', gcf);' };
 	[result, userdat2, strhalt, outstruct, instruct] = inputgui( 'mode', 'noclose', optiongui{:});
-    if isempty(result), return; end
-    if ~isempty(get(0, 'currentfigure')) currentfig = gcf; end
+    if isempty(result), return; end;
+    if ~isempty(get(0, 'currentfigure')) currentfig = gcf; end;
     
     while test_wrong_parameters(currentfig)
     	[result, userdat2, strhalt, outstruct] = inputgui( 'mode', currentfig, optiongui{:});
-        if isempty(result), return; end
-    end
+        if isempty(result), return; end;
+    end;
     close(currentfig);
 
     % convert GUI selection to options
     % --------------------------------
     allcom = simplifycom(userdat2{4});
     options = {};
-    if ~strcmpi(result{1}, STUDY.name ), options = { options{:} 'name'        result{1} }; end
-    if ~strcmpi(result{2}, STUDY.task ), options = { options{:} 'task'        result{2} }; end
-    if ~strcmpi(result{3}, STUDY.notes), options = { options{:} 'notes'       result{3} }; end
-    if ~isempty(allcom),                 options = { options{:} 'commands'    allcom    }; end
+    if ~strcmpi(result{1}, STUDY.name ), options = { options{:} 'name'        result{1} }; end;
+    if ~strcmpi(result{2}, STUDY.task ), options = { options{:} 'task'        result{2} }; end;
+    if ~strcmpi(result{3}, STUDY.notes), options = { options{:} 'notes'       result{3} }; end;
+    if ~isempty(allcom),                 options = { options{:} 'commands'    allcom    }; end;
 %     if isnumeric(outstruct(1).studyfile)
-%         if outstruct(1).studyfile == 1,  options = { options{:} 'resave'      'on' }; end
+%         if outstruct(1).studyfile == 1,  options = { options{:} 'resave'      'on' }; end;
 %     else
-%         if ~isempty(outstruct(1).studyfile), options = { options{:} 'filename' outstruct(1).studyfile }; end
-%     end
+%         if ~isempty(outstruct(1).studyfile), options = { options{:} 'filename' outstruct(1).studyfile }; end;
+%     end;
     if outstruct(1).copy_to_dataset == 1
          options = { options{:} 'updatedat' 'on' };
          eeglab_options;
          if option_storedisk
              options = { options{:} 'savedat' 'on' };
-         end
+         end;
     else options = { options{:} 'updatedat' 'off' };
-    end
+    end;
     
     if outstruct(1).delclust == 1
         options = { options{:} 'rmclust' 'on' };
     else
         options = { options{:} 'rmclust' 'off' };
-    end
+    end;
     
     % ---
     if ~isequal(outstruct, instruct) && (outstruct(1).delclust ~= 1) % notice that isequal is sensitive to fields order. isequaln isn't backward compatible 
@@ -357,18 +332,14 @@ elseif strcmpi(mode, 'gui') % GUI mode
             res = questdlg2(txt, 'Dataset format problem', 'Yes', 'No, abort', 'Yes');
             if strcmpi(res, 'yes'), options = { options{:} 'addchannellabels' 'on' 'savedat' 'on'}; 
             else return;
-            end
-        end
-    end
+            end;
+        end;
+    end;
     
     % run command and create history
     % ------------------------------
-    if alleegEmpty
-        com = sprintf( '[STUDY ALLEEG] = std_editset( STUDY, [], %s );\n[STUDY ALLEEG] = std_checkset(STUDY, ALLEEG);', vararg2str(options) );
-    else
-        com = sprintf( '[STUDY ALLEEG] = std_editset( STUDY, ALLEEG, %s );\n[STUDY ALLEEG] = std_checkset(STUDY, ALLEEG);', vararg2str(options) );
-    end
-    [STUDY, ALLEEG] = std_editset(STUDY, ALLEEG, options{:});
+    com = sprintf( '[STUDY ALLEEG] = std_editset( STUDY, ALLEEG, %s );\n[STUDY ALLEEG] = std_checkset(STUDY, ALLEEG);', vararg2str(options) );
+    [STUDY ALLEEG] = std_editset(STUDY, ALLEEG, options{:});
     
 else % internal command
     
@@ -393,21 +364,8 @@ else % internal command
             datasetinfo(realindex).subject   = varargin{2};
             if get(findobj(hdl, 'tag', 'copy_to_dataset'), 'value')
                 ALLEEG(realindex).subject    = varargin{2};
-            end
+            end;
             allcom = { allcom{:}, { 'index' realindex 'subject' varargin{2} } };
-            userdat{1} = ALLEEG;
-            userdat{2} = datasetinfo;
-            userdat{4} = allcom;
-            set(hdl, 'userdata', userdat);            
-
-        case 'run'
-            guiindex  = varargin{1};
-            realindex = guiindex+(page-1)*10;
-            datasetinfo(realindex).run = str2num(varargin{2});
-            if get(findobj(hdl, 'tag', 'copy_to_dataset'), 'value')
-                ALLEEG(realindex).run  = str2num(varargin{2});
-            end
-            allcom = { allcom{:}, { 'index' realindex 'run' str2num(varargin{2}) } };
             userdat{1} = ALLEEG;
             userdat{2} = datasetinfo;
             userdat{4} = allcom;
@@ -419,20 +377,20 @@ else % internal command
             datasetinfo(realindex).session   = str2num(varargin{2});
             if get(findobj(hdl, 'tag', 'copy_to_dataset'), 'value')
                 ALLEEG(realindex).session    = str2num(varargin{2});
-            end
+            end;
             allcom = { allcom{:}, { 'index' realindex 'session' str2num(varargin{2}) } };
             userdat{1} = ALLEEG;
             userdat{2} = datasetinfo;
             userdat{4} = allcom;
-            set(hdl, 'userdata', userdat);   
-            
+            set(hdl, 'userdata', userdat);            
+
         case 'group'
             guiindex  = varargin{1};
             realindex = guiindex+(page-1)*10;
             datasetinfo(realindex).group   = varargin{2};
             if get(findobj(hdl, 'tag', 'copy_to_dataset'), 'value')
                 ALLEEG(realindex).group    = varargin{2};
-            end
+            end;
             allcom = { allcom{:}, { 'index' realindex 'group' varargin{2} } };
             userdat{1} = ALLEEG;
             userdat{2} = datasetinfo;
@@ -445,7 +403,7 @@ else % internal command
             datasetinfo(realindex).condition   = varargin{2};
             if get(findobj(hdl, 'tag', 'copy_to_dataset'), 'value')
                 ALLEEG(realindex).conditon     = varargin{2};
-            end
+            end;
             allcom = { allcom{:}, { 'index' realindex 'condition' varargin{2} } };
             userdat{1} = ALLEEG;
             userdat{2} = datasetinfo;
@@ -459,14 +417,14 @@ else % internal command
                                        'NOTE: This will delete any existing component clusters!') }, ...
                                        'pop_study():  Pre-select components', 1, { '15' },'pop_study' );
            
-            if isempty(res), return; end
+            if isempty(res), return; end;
             if res{2} == 1
                 STUDY = std_editset(STUDY, ALLEEG, 'commands', { 'inbrain', 'on', 'dipselect' str2num(res{1})/100 'return' });
                 allcom = { allcom{:}, { 'inbrain', 'on', 'dipselect' str2num(res{1})/100 } };
             else
                 STUDY = std_editset(STUDY, ALLEEG, 'commands', { 'inbrain', 'off','dipselect' str2num(res{1})/100 'return' });
                 allcom = { allcom{:}, { 'inbrain', 'off', 'dipselect' str2num(res{1})/100 } };
-            end
+            end;
                 
             datasetinfo   = STUDY.datasetinfo;
             
@@ -483,7 +441,7 @@ else % internal command
             
             for index = 1:size(ALLEEG(realindex).icaweights,1)
                 complist{index} = [ 'IC ' int2str(index) ];
-            end
+            end;
             [tmps,tmpv] = listdlg2('PromptString', 'Select components', 'SelectionMode', ...
                                     'multiple', 'ListString', strvcat(complist), 'initialvalue', datasetinfo(realindex).comps);
             if tmpv ~= 0 % no cancel                
@@ -491,18 +449,17 @@ else % internal command
                 % find other subjects with the same session
                 % -----------------------------------------
                 for index = 1:length(datasetinfo)
-                    if realindex == index || (strcmpi(datasetinfo(index).subject, datasetinfo(realindex).subject) && ...
-                                ~isempty(datasetinfo(index).subject) && ...
-                                isequal( datasetinfo(index).session, datasetinfo(realindex).session ) && ...
-                                isequal( datasetinfo(index).run, datasetinfo(realindex).run ) )
+                    if realindex == index | (strcmpi(datasetinfo(index).subject, datasetinfo(realindex).subject) & ...
+                                ~isempty(datasetinfo(index).subject) & ...
+                                isequal( datasetinfo(index).session, datasetinfo(realindex).session ) )
                         datasetinfo(index).comps = tmps;
                         allcom = { allcom{:}, { 'index' index 'comps' tmps } };
                         set(findobj('tag', [ 'comps' int2str(index) ]), ...
                             'string', formatbut(tmps), 'horizontalalignment', 'left');
-                    end
-                end
+                    end;
+                end;
                 
-            end
+            end;
             userdat{2} = datasetinfo;
             userdat{4} = allcom;
             set(hdl, 'userdata', userdat);            
@@ -516,7 +473,6 @@ else % internal command
             datasetinfo(realindex).filepath  = '';   
             datasetinfo(realindex).subject   = '';
             datasetinfo(realindex).session   = [];
-            datasetinfo(realindex).run       = [];
             datasetinfo(realindex).condition = '';
             datasetinfo(realindex).group     = '';                    
             datasetinfo(realindex).comps     = [];                    
@@ -554,7 +510,6 @@ else % internal command
             datasetinfo(realindex).filepath  = ALLEEG(realindex).filepath;   
             datasetinfo(realindex).subject   = ALLEEG(realindex).subject;
             datasetinfo(realindex).session   = ALLEEG(realindex).session;
-            datasetinfo(realindex).run       = ALLEEG(realindex).run;
             datasetinfo(realindex).condition = ALLEEG(realindex).condition;
             datasetinfo(realindex).group     = ALLEEG(realindex).group;                    
             datasetinfo(realindex).comps     = [];                    
@@ -574,21 +529,21 @@ else % internal command
                         set(findobj('parent', hdl, 'tag',['comps' num2str(k)]), 'enable', 'off');
                         set(findobj('parent', hdl, 'tag',['sess'  num2str(k)]), 'enable', 'off');
                         set(findobj('parent', hdl, 'tag',['brw'   num2str(k)]), 'enable', 'off');
-                    end
+                    end;
                 else
                     for k = 1:10
                         set(findobj('parent', hdl, 'tag',['set'   num2str(k)]), 'style', 'edit');
                         set(findobj('parent', hdl, 'tag',['comps' num2str(k)]), 'enable', 'on');
                         set(findobj('parent', hdl, 'tag',['sess'  num2str(k)]), 'enable', 'on');
                         set(findobj('parent', hdl, 'tag',['brw'   num2str(k)]), 'enable', 'on');
-                    end
-                end
+                    end;
+                end;
             else 
                 set(findobj(hdl, 'tag', 'delclust'), 'value', 0)
                 if nargin > 2
                     warndlg2('No cluster present');
-                end
-            end
+                end;
+            end;
          
         case 'redraw'
             for k = 1:10
@@ -598,7 +553,6 @@ else % internal command
                     set(findobj('parent', hdl, 'tag',['set' num2str(k)]), 'string', '');
                     set(findobj('parent', hdl, 'tag',['sub' num2str(k)]), 'string','');
                     set(findobj('parent', hdl, 'tag',['sess' num2str(k)]), 'string','');
-                    set(findobj('parent', hdl, 'tag',['run'  num2str(k)]), 'string','');
                     set(findobj('parent', hdl, 'tag',['cond' num2str(k)]), 'string','');
                     set(findobj('parent', hdl, 'tag',['comps' num2str(k)]), 'string','');
                     set(findobj('parent', hdl, 'tag',['group' num2str(k)]), 'string','');
@@ -607,32 +561,31 @@ else % internal command
                     set(findobj('parent', hdl, 'tag',['set' num2str(k)]), 'string', fullfile(char(datasetinfo(kk).filepath), char(datasetinfo(kk).filename)));
                     set(findobj('parent', hdl, 'tag',['sub' num2str(k)]), 'string', datasetinfo(kk).subject);
                     set(findobj('parent', hdl, 'tag',['sess' num2str(k)]), 'string', int2str(datasetinfo(kk).session));
-                    set(findobj('parent', hdl, 'tag',['run' num2str(k)]),  'string', int2str(datasetinfo(kk).run));
                     set(findobj('parent', hdl, 'tag',['cond' num2str(k)]), 'string', datasetinfo(kk).condition);
                     set(findobj('parent', hdl, 'tag',['comps' num2str(k)]), 'string', formatbut(datasetinfo(kk).comps));
                     set(findobj('parent', hdl, 'tag',['group' num2str(k)]), 'string', datasetinfo(kk).group);
-                end
+                end;
             end
             if page<10
                  pagestr =  [ ' Page ' int2str(page) ];
             else pagestr =  [ 'Page ' int2str(page) ];
-            end
+            end;
             set(findobj('parent', hdl, 'tag','page'), 'string', pagestr );
     end
-end
+end;
 
 % remove empty elements in allcom
 % -------------------------------
 function allcom = simplifycom(allcom);
 
     for index = length(allcom)-1:-1:1
-        if strcmpi(allcom{index}{1}, 'index') && strcmpi(allcom{index+1}{1}, 'index')
+        if strcmpi(allcom{index}{1}, 'index') & strcmpi(allcom{index+1}{1}, 'index')
             if allcom{index}{2} == allcom{index+1}{2} % same dataset index
                 allcom{index}(end+1:end+length(allcom{index+1})-2) = allcom{index+1}(3:end);
                 allcom(index+1) = [];
-            end
-        end
-    end
+            end;
+        end;
+    end;
     
 % test for wrong parameters
 % -------------------------
@@ -644,17 +597,15 @@ function bool = test_wrong_parameters(hdl)
     bool = 0;
     for index = 1:length(datasetinfo)
         if ~isempty(datasetinfo(index).filename)
-            if isempty(datasetinfo(index).subject) && bool == 0
+            if isempty(datasetinfo(index).subject) & bool == 0
                 bool = 1; warndlg2('All datasets must have a subject name or code', 'Error');
-            end
-        end
-    end
+            end;
+        end;
+    end;
     
     nonempty     = cellfun('isempty', { datasetinfo.filename });
     anysession   = any(~cellfun('isempty', { datasetinfo(nonempty).session }));
     allsession   = all(~cellfun('isempty', { datasetinfo(nonempty).session }));
-    anyrun       = any(~cellfun('isempty', { datastrinfo(nonempty).run}));
-    allrun       = all(~cellfun('isempty', { datastrinfo(nonempty).run}));
     anycondition = any(~cellfun('isempty', { datasetinfo(nonempty).condition }));
     allcondition = all(~cellfun('isempty', { datasetinfo(nonempty).condition }));
     anygroup     = any(~cellfun('isempty', { datasetinfo(nonempty).group }));
@@ -662,29 +613,26 @@ function bool = test_wrong_parameters(hdl)
     anydipfit    = any(~cellfun('isempty', { datastrinfo(nonempty).dipfit}));
     alldipfit    = all(~cellfun('isempty', { datastrinfo(nonempty).dipfit}));
 
-    if anygroup && ~allgroup
+    if anygroup & ~allgroup
          bool = 1; warndlg2('If one dataset has a group label, they must all have one', 'Error');
-    end
-    if anycondition && ~allcondition
+    end;
+    if anycondition & ~allcondition
          bool = 1; warndlg2('If one dataset has a condition label, they must all have one', 'Error');
-    end
-    if anysession && ~allsession
+    end;
+    if anysession & ~allsession
          bool = 1; warndlg2('If one dataset has a session index, they must all have one', 'Error');
-    end
-    if anyrun && ~allrun
-         bool = 1; warndlg2('If one dataset has a session index, they must all have one', 'Error');
-    end
-    if anydipfit && ~alldipfit
+    end;
+    if anydipfit & ~alldipfit
          bool = 1; warndlg2('Dipole''s data across datasets is not uniform');
-    end
+    end;    
 function strbut = formatbut(complist)
     if isempty(complist)
         strbut = 'All comp.';
     else
         if length(complist) > 3, strbut = [ 'Comp.: ' int2str(complist(1:2)) ' ...' ];
         else                     strbut = [ 'Comp.: ' int2str(complist) ];
-        end
-    end
+        end;
+    end;
 
     
 %---------------------- helper functions -------------------------------------    
@@ -697,11 +645,11 @@ if nargin < 4
 end;	
 if nargin < 5
 	funcname = '';
-end
+end;
 	
 if length(Prompt) ~= length(DefAns)
 	error('inputdlg2: prompt and default answer cell array must have the smae size');
-end
+end;
 
 geometry = {};
 listgui = {};
@@ -711,19 +659,19 @@ listgui = {};
 geomvert = [];
 for index = 1:length(Prompt)
 	geomvert = [geomvert size(Prompt{index},1) 1];  % default is vertical geometry
-end
-if all(geomvert == 1) && length(Prompt) > 1
+end;
+if all(geomvert == 1) & length(Prompt) > 1
 	geomvert = []; % horizontal
-end
+end;
 
 for index = 1:length(Prompt)
 	if ~isempty(geomvert) % vertical
 		geometry = { geometry{:} [ 1] [1 ]};
 	else
 		geometry = { geometry{:} [ 1 0.6 ]};
-	end
+	end;
 	listgui = { listgui{:} { 'Style', 'text', 'string', Prompt{index}}  ...
 				{ 'Style', 'edit', 'string', DefAns{index} } { 'Style', 'checkbox', 'string','Keep only in-brain dipoles (requires Fieldtrip extension).','value',1 }  };
-end
+end;
 geometry = [1 1 1];geomvert = [2 1 1];
 result = inputgui(geometry, listgui, ['pophelp(''' funcname ''');'], Title, [], 'normal', geomvert);

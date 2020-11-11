@@ -49,30 +49,19 @@
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, Feb 03, 2005, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 % Coding notes: Useful information on functions and global variables used.
 
@@ -137,38 +126,38 @@ for k = 1:length(clsind)
                 case 'scalp'
                     centroid{k}.scalp = 0; 
                     scalpC = 1;
-                    if (l ==1) && (k ==1)
+                    if (l ==1) & (k ==1)
                         fprintf('scalp ');
                     end
                 case 'erp'
                     centroid{k}.erp{l} = 0; 
                     erpC = 1;
-                    if (l ==1) && (k ==1)
+                    if (l ==1) & (k ==1)
                         fprintf('erp ');
                     end
                 case 'spec'
                     centroid{k}.spec{l} = 0; 
                     specC = 1;
-                    if (l ==1) && (k ==1)
+                    if (l ==1) & (k ==1)
                         fprintf('spectrum ');
                     end
                 case 'ersp'
                     centroid{k}.ersp{l} = 0; 
                     centroid{k}.ersp_limits{l} = 0;
                     erspC =1;
-                    if (l ==1) && (k ==1)
+                    if (l ==1) & (k ==1)
                         fprintf('ersp ');
                     end
                 case 'itc'
                     centroid{k}.itc{l} = 0; 
                     centroid{k}.itc_limits{l} = 0;
                     itcC = 1;
-                    if (l ==1) && (k ==1)
+                    if (l ==1) & (k ==1)
                         fprintf('itc ');
                     end                    
                 case 'dipole'
                     dipoleC =1;
-                    if (l ==1) && (k ==1)
+                    if (l ==1) & (k ==1)
                         fprintf('dipole ');
                     end
             end
@@ -176,13 +165,13 @@ for k = 1:length(clsind)
     end
 end   
 fprintf('centroid (only done once)\n');
-if itcC || erspC || specC || erpC || scalpC
+if itcC | erspC | specC | erpC | scalpC
     for clust = 1:length(clsind) %go over all requested clusters
         for cond = 1:Ncond %compute for all conditions
             for k = 1:length(STUDY.cluster(clsind(clust)).comps) % go through all components
                 comp  = STUDY.cluster(clsind(clust)).comps(k);
                 abset = STUDY.cluster(clsind(clust)).sets(cond,k);
-                if scalpC && cond == 1  %scalp centroid, does not depend on condition 
+                if scalpC & cond == 1  %scalp centroid, does not depend on condition 
                     grid = std_readtopo(ALLEEG, abset, comp);
                     if isempty(grid)
                         return;
@@ -195,7 +184,7 @@ if itcC || erspC || specC || erpC || scalpC
                     if isempty(erp)
                         return;
                     end
-                    if (cond==1) && (k==1)
+                    if (cond==1) & (k==1)
                         all_erp = zeros(length(erp),length(STUDY.cluster(clsind(clust)).comps));
                     end
                     all_erp(:,k) = erp';
@@ -247,7 +236,7 @@ if itcC || erspC || specC || erpC || scalpC
         end
         if ~scalpC
             fprintf('\n');
-        end
+        end;
 	end
 end
 
@@ -285,7 +274,7 @@ if dipoleC %dipole centroid
         centroid{clust}.dipole.posxyz =  tmppos/ndip;
         centroid{clust}.dipole.momxyz =  tmpmom/ndip;
         centroid{clust}.dipole.rv =  tmprv/ndip;
-        if strcmpi(ALLEEG(abset).dipfit.coordformat, 'spherical') && (~isfield(ALLEEG(abset).dipfit, 'hdmfile')) %old dipfit
+        if strcmpi(ALLEEG(abset).dipfit.coordformat, 'spherical') & (~isfield(ALLEEG(abset).dipfit, 'hdmfile')) %old dipfit
             centroid{clust}.dipole.maxr = max_r;
         end
         STUDY.cluster(clsind(clust)).centroid.dipole = centroid{clust}.dipole;
@@ -296,7 +285,7 @@ end
 for clust =  1:length(clsind) %go over all requested clusters
     for cond  = 1:Ncond
         ncomp = length(STUDY.cluster(clsind(clust)).comps);
-        if scalpC && cond == 1%scalp centroid
+        if scalpC & cond == 1%scalp centroid
             centroid{clust}.scalp  = centroid{clust}.scalp/ncomp;
             STUDY.cluster(clsind(clust)).centroid.scalp = centroid{clust}.scalp ;
         end

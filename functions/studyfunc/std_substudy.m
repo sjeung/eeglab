@@ -29,30 +29,19 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [ STUDY ALLEEG ] = std_substudy(STUDY, ALLEEG, varargin);
 
@@ -66,7 +55,7 @@ opt = finputcheck(varargin, { 'condition' 'cell' {}      {};
                               'group'     'cell' {}      {};
                               'rmdat'     'string' { 'on','off' }      'on';
                               'subject'   'cell' {}      {} }, 'std_substudy');
-if ischar(opt), return; end
+if isstr(opt), return; end;
 
 % find datasets to remove
 % -----------------------
@@ -75,26 +64,26 @@ if ~isempty(opt.subject)
     for index = 1:length(STUDY.datasetinfo)
         if ~strmatch(STUDY.datasetinfo.subject, opt.subject, 'exact')
             tagdel = [ tagdel index ];
-        end
-    end
-end
+        end;
+    end;
+end;
 if ~isempty(opt.condition)
     for index = 1:length(STUDY.datasetinfo)
         if ~strmatch(STUDY.datasetinfo.condition, opt.condition, 'exact')
             tagdel = [ tagdel index ];
-        end
-    end
-end
+        end;
+    end;
+end;
 if ~isempty(opt.group)
     for index = 1:length(STUDY.datasetinfo)
         if ~strmatch(STUDY.datasetinfo.group, opt.group, 'exact')
             tagdel = [ tagdel index ];
-        end
-    end
-end
+        end;
+    end;
+end;
 if ~isempty(opt.dataset)
     tagdel = [ tagdel setdiff([1:length(ALLEEG)], opt.dataset) ];
-end
+end;
 tagdel = unique_bc(tagdel);
 
 % find new dataset indices
@@ -104,22 +93,22 @@ if strcmpi(opt.rmdat, 'on')
     alldats(tagdel) = [];
     for index = 1:length(ALLEEG)
         tmp = find(alldats == index);
-        if isempty(tmp), tmp = NaN; end
+        if isempty(tmp), tmp = NaN; end;
         datcoresp(index) = tmp;
-    end
+    end;
     ALLEEG(tagdel) = [];
     STUDY.datasetinfo(tagdel) = [];
     for index = 1:length(STUDY.datasetinfo)
         STUDY.datasetinfo(index).index = index;
-    end
+    end;
 else
     alldats(tagdel) = [];
     for index = 1:length(ALLEEG)
         tmp = find(alldats == index);
-        if isempty(tmp), tmp = NaN; else tmp = index; end
+        if isempty(tmp), tmp = NaN; else tmp = index; end;
         datcoresp(index) = tmp;
-    end
-end
+    end;
+end;
 
 % check channel consistency
 % -------------------------
@@ -130,9 +119,9 @@ for i = 1:length(STUDY.changrp)
            nonnans = find(~isnan(newinds));
            STUDY.changrp(i).setinds{c,g} = newinds(nonnans);
            STUDY.changrp(i).allinds{c,g} = STUDY.changrp(i).allinds{c,g}(nonnans);
-       end
-    end
-end
+       end;
+    end;
+end;
 
 % check cluster consistency
 % -------------------------
@@ -142,10 +131,10 @@ for index = 1:length(STUDY.cluster)
         if all(isnan(STUDY.cluster(index).sets(:,i)))
             STUDY.cluster(index).sets(:,i) = [];
             STUDY.cluster(index).comps(:,i) = [];
-        end
-    end
+        end;
+    end;
     [tmp STUDY.cluster(index).setinds STUDY.cluster(index).allinds] = std_setcomps2cell(STUDY, STUDY.cluster(index).sets, STUDY.cluster(index).comps);
-end
+end;
 
 STUDY = std_reset(STUDY);
 STUDY = std_checkset(STUDY, ALLEEG);

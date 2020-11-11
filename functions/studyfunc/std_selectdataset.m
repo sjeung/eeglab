@@ -21,40 +21,29 @@
 
 % Copyright (C) Arnaud Delorme, arno@salk.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [datind, dattrialselect] = std_selectdataset(STUDY, ALLEEG, indvar, indvarvals, verboseFlag);
 
 if nargin < 3
     help std_selectdataset;
     return;
-end
+end;
 if nargin < 5
     verboseFlag = 'verbose';
-end
+end;
 
 % check for multiple condition selection
 if ~iscell(indvarvals), 
@@ -65,41 +54,41 @@ if ~iscell(indvarvals),
         pos(end+1) = length(tmpindvar)+1;
         for ind = 1:length(pos)-1
             indvarvals{end+1} = tmpindvar(pos(ind)+3:pos(ind+1)-1);
-        end
+        end;
     else
         indvarvals = { indvarvals }; 
-    end
-end
+    end;
+end;
 
 % default dattrialselect = all trials
 % -----------------------------------
 if isfield(STUDY.datasetinfo, 'trialinfo')
      dattrialselect = cellfun(@(x)([1:length(x)]), { STUDY.datasetinfo.trialinfo }, 'uniformoutput', false);
-else for i=1:length(ALLEEG), dattrialselect{i} = [1:ALLEEG(i).trials]; end
-end
+else for i=1:length(ALLEEG), dattrialselect{i} = [1:ALLEEG(i).trials]; end;
+end;
     
 if isempty(indvar)
     datind = [1:length(STUDY.datasetinfo)];
 elseif isfield(STUDY.datasetinfo, indvar) && ~isempty(getfield(STUDY.datasetinfo(1), indvar))
     % regular selection of dataset in datasetinfo
     % -------------------------------------------
-    if strcmpi(verboseFlag, 'verbose'), fprintf('   Selecting datasets with field ''%s'' equal to %s\n', indvar, vararg2str(indvarvals)); end
+    if strcmpi(verboseFlag, 'verbose'), fprintf('   Selecting datasets with field ''%s'' equal to %s\n', indvar, vararg2str(indvarvals)); end;
     eval( [ 'myfieldvals = { STUDY.datasetinfo.' indvar '};' ] );
     datind = [];
     for dat = 1:length(indvarvals)
         datind = union_bc(datind, std_indvarmatch(indvarvals{dat}, myfieldvals));
-    end
+    end;
 else
     % selection of trials within datasets
     % -----------------------------------
-    if strcmpi(verboseFlag, 'verbose'), fprintf('   Selecting trials with field ''%s'' equal to %s\n', indvar, vararg2str(indvarvals)); end
+    if strcmpi(verboseFlag, 'verbose'), fprintf('   Selecting trials with field ''%s'' equal to %s\n', indvar, vararg2str(indvarvals)); end;
     dattrials      = cellfun(@(x)(eval(['{ x.' indvar '}'])),  { STUDY.datasetinfo.trialinfo }, 'uniformoutput', false);
     dattrials      = cellfun(@(x)(eval(['{ x.' indvar '}'])),  { STUDY.datasetinfo.trialinfo }, 'uniformoutput', false); % do not remove duplicate line (or Matlab crashes)
     dattrialselect = cell(1,length(STUDY.datasetinfo));
     for dat = 1:length(indvarvals)
         for tmpi = 1:length(dattrials)
             dattrialselect{tmpi} = union_bc(dattrialselect{tmpi}, std_indvarmatch(indvarvals{dat}, dattrials{tmpi}));
-        end
-    end
+        end;
+    end;
     datind = find(~cellfun(@isempty, dattrialselect));
-end
+end;

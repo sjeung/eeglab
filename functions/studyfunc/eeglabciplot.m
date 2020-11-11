@@ -1,4 +1,3 @@
-function eeglabciplot(lower,upper,x,colour, alphaval)
 % eeglabciplot(lower,upper)       
 % eeglabciplot(lower,upper,x)
 % eeglabciplot(lower,upper,x,colour)
@@ -12,6 +11,7 @@ function eeglabciplot(lower,upper,x,colour, alphaval)
 
 % Author:   Raymond Reynolds 24/11/06
 % Modified by Ramon Martinez Cancino
+function eeglabciplot(lower,upper,x,colour, alphaval)
 
 if length(lower)~=length(upper)
     error('lower and upper vectors must be same length')

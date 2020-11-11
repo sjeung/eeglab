@@ -32,30 +32,19 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function STUDY = std_propplot(STUDY, ALLEEG,  varargin)
 
@@ -108,7 +97,7 @@ if iscell(varargin{1}) % channel plotting
             disp('include them in pre-clustering. There, specify 0 dimensions if you do');
             disp('now want a property (scalp map, ERSP, etc...) to be included');
             disp('in the clustering procedure. See the clustering tutorial.');
-        end
+        end;
 
     end  % Finished all conditions
     return;
@@ -121,7 +110,7 @@ if length(varargin) > 0
     if length(varargin) == 1, varargin{2} = varargin{1}; end; % backward compatibility
     if isnumeric(varargin{2})
         cls = varargin{2};
-    elseif ischar(varargin{2}) && strcmpi(varargin{2}, 'all')
+    elseif isstr(varargin{2}) & strcmpi(varargin{2}, 'all')
         cls = 1:length(STUDY.cluster);
     else
         error('cluster input should be either a vector of cluster indices or the keyword ''all''.');
@@ -202,7 +191,7 @@ for k = 1: len
         disp('include them in pre-clustering. There, specify 0 dimensions if you do');
         disp('not want a property (scalp map, ERSP, etc...) to be included');
         disp('in the clustering procedure. See the clustering tutorial.');
-    end
+    end;
     
 end  % Finished all conditions
 
@@ -212,6 +201,6 @@ if ishandle(erpAxisHangle) % make sure it is a valid graphics handle
     
     set(erpAxisHangle,'YTickLabelMode','auto');
     set(erpAxisHangle,'YTickMode','auto');
-end
+end;
 delete(h_wait)
 

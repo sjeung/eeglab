@@ -45,8 +45,6 @@
 %   'interp'     - [struct] channel location structure containing electrode
 %                  to interpolate ((this entry is ignored when plotting 
 %                  components). Default is no interpolation.
-%   'output'     - ['power'|'fft'] compute power of keep single complex
-%                  'fft' estimate. Default is 'power'.
 %   'fileout'    - [string] name of the file to save on disk. The default
 %                  is the same name (with a different extension) as the 
 %                  dataset given as input.
@@ -75,8 +73,7 @@
 %                  period.
 %   'logtrials'  - ['on'|'off'] compute single-trial log transform before
 %                  averaging them. Default is 'off' for 'psd' specmode and
-%                  'on' for 'fft' specmode. Ignored when output is set to
-%                  'fft'.
+%                  'on' for 'fft' specmode.
 %   'continuous' - ['on'|'off'] force epoch data to be treated as
 %                  continuous so small data epochs can be extracted for the
 %                  'fft' specmode option. Default is 'off'.
@@ -87,11 +84,6 @@
 %   'nw'         - [integer] number of tapers for the 'pmtm' spectral
 %                  method. Default is 4.
 %   'burgorder'  - [integet] order for the Burg spectral method.
-%
-% Changes between EEGLAB 13 and later EEGLAB versions:
-% For the 'specmode' option 'fft', EEGLAB 14 and later version detrend the 
-% data and apply hamming taper to it. EEGLAB 13 and earlier remove the 
-% baseline from the data and apply a hamming taper but only for continuous data.
 %
 % Other optional spectral parameters:
 %   All optional parameters to the spectopo function may be provided to this 
@@ -117,30 +109,19 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, October 11, 2004, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [X, f, overwrt] = std_spec(EEG, varargin)
 
@@ -148,24 +129,24 @@ overwrt = 1; % deprecated
 if nargin < 1
     help std_spec;
     return;
-end
+end;
 
 % decode inputs
 % -------------
 if ~isempty(varargin) 
-    if ~ischar(varargin{1})
+    if ~isstr(varargin{1})
         varargin = { varargin{:} [] [] };
         if all(varargin{1} > 0) 
             options = { 'components' varargin{1} 'freqrange' varargin{2} };
         else
             options = { 'channels' -varargin{1} 'freqrange' varargin{2} };
-        end
+        end;
     else
         options = varargin;
-    end
+    end;
 else
     options = varargin;
-end
+end;
 
 [g spec_opt] = finputcheck(options, { 'components' 'integer' []         [];
                                       'channels'   'cell'    {}         {};
@@ -175,7 +156,6 @@ end
                                       'savetrials' 'string'  { 'on','off' } 'off';
                                       'continuous' 'string'  { 'on','off' } 'off';
                                       'logtrials'  'string'  { 'on','off' 'notset' } 'notset';
-                                      'output'     'string'  { 'power','fft' } 'power';
                                       'savefile'   'string'  { 'on','off' } 'on';
                                       'epochlim'   'real'    []         [0 1];
                                       'trialindices' { 'integer','cell' } []         [];
@@ -183,15 +163,11 @@ end
                                       'rmcomps'    'cell'    []         cell(1,length(EEG));
                                       'nw'         'float'   []         4;
                                       'fileout'    'string'  []         '';
-                                      'trialinfo'  'struct'  []         struct([]);
                                       'burgorder'  'integer' []         20;
                                       'interp'     'struct'  { }        struct([]);
                                       'nfft'       'integer' []         [];
                                       'freqrange'  'real'    []         [] }, 'std_spec', 'ignore');
-if ischar(g), error(g); end
-if isempty(g.trialindices), g.trialindices = cell(length(EEG)); end
-if ~iscell(g.trialindices), g.trialindices = { g.trialindices }; end
-if ~strcmpi(g.specmode, 'fft') && strcmpi(g.output, 'ftt'), error('FFT option only valid when computing FFT'); end
+if isstr(g), error(g); end;
 if isfield(EEG,'icaweights')
    numc = size(EEG(1).icaweights,1);
 else
@@ -205,35 +181,39 @@ EEG_etc = [];
 
 % filename 
 % --------
-if isempty(g.fileout), g.fileout = fullfile(EEG(1).filepath, EEG(1).filename(1:end-4)); end
+if isempty(g.fileout), g.fileout = fullfile(EEG(1).filepath, EEG(1).filename(1:end-4)); end;
 if ~isempty(g.channels)
     filename = [ g.fileout '.datspec'];
     prefix = 'chan';
 else    
     filename = [ g.fileout '.icaspec'];
     prefix = 'comp';
-end
+end;
 
 % SPEC information found in datasets
 % ---------------------------------
-if exist(filename) && strcmpi(g.recompute, 'off')
+if exist(filename) & strcmpi(g.recompute, 'off')
 
     fprintf('File "%s" found on disk, no need to recompute\n', filename);
+    setinfo.filebase = g.fileout;
     if strcmpi(prefix, 'comp')
-        [X,tmp,f] = std_readfile(filename, 'components', g.components, 'freqlimits', g.freqrange, 'measure', 'spec');
+        [X tmp f] = std_readfile(setinfo, 'components', g.components, 'freqlimits', g.freqrange, 'measure', 'spec');
     else
-        [X,tmp,f] = std_readfile(filename, 'channels', g.channels, 'freqlimits', g.freqrange, 'measure', 'spec');
-    end
-    if ~isempty(X), return; end
+        [X tmp f] = std_readfile(setinfo, 'channels', g.channels, 'freqlimits', g.freqrange, 'measure', 'spec');
+    end;
+    if ~isempty(X), return; end;
 end
 
 % No SPEC information found
 % -------------------------
+options = {};
+if ~isempty(g.rmcomps), options = { options{:} 'rmcomps' g.rmcomps }; end;
+if ~isempty(g.interp),  options = { options{:} 'interp'  g.interp  }; end;
 if isempty(g.channels)
-     [X,boundaries]  = eeg_getdatact(EEG, 'component', [1:size(EEG(1).icaweights,1)], 'trialindices', g.trialindices );
-else [X,boundaries]  = eeg_getdatact(EEG, 'trialindices', g.trialindices, 'rmcomps', g.rmcomps, 'interp', g.interp);
-end
-if ~isempty(boundaries) && boundaries(end) ~= size(X,2), boundaries = [boundaries size(X,2)]; end
+     [X boundaries]  = eeg_getdatact(EEG, 'component', [1:size(EEG(1).icaweights,1)], 'trialindices', g.trialindices );
+else [X boundaries]  = eeg_getdatact(EEG, 'trialindices', g.trialindices, 'rmcomps', g.rmcomps, 'interp', g.interp);
+end;
+if ~isempty(boundaries) && boundaries(end) ~= size(X,2), boundaries = [boundaries size(X,2)]; end;
  
 % get specific time range for epoched and continuous data
 % -------------------------------------------------------
@@ -245,87 +225,64 @@ if ~isempty(g.timerange)
         EEG(1).pnts = length(timebef);
     else
         disp('warning: ''timerange'' option cannot be used with continuous data');
-    end
-end
+    end;
+end;
 
 % extract epochs if necessary
 % ---------------------------
 if ~strcmpi(g.specmode, 'psd')
-    if all([ EEG.trials] == 1) || strcmpi(g.continuous, 'on')
-        epochCount  = 1;
-        sampleCount = 1;
-        for iEEG = 1:length(EEG)
-            TMP = EEG(1);
-            TMP.data = X;
-            TMP.icaweights = [];
-            TMP.icasphere  = [];
-            TMP.icawinv    = [];
-            TMP.icaact     = [];
-            TMP.icachansind = [];
-            TMP.trials = size(TMP.data,3);
-            TMP.pnts   = size(TMP.data,2);
-            TMP.event  = [];
-            TMP.epoch  = [];
-            for index = 1:length(boundaries)
-                TMP.event(index).type = 'boundary';
-                TMP.event(index).latency = boundaries(index);
-            end
-            TMP = eeg_checkset(TMP);
-            if TMP.trials > 1
-                % epoch data - need to re-extract data
-                TMP = pop_select(TMP, 'trials', [epochCount:(epochCount+EEG(iEEG).trials-1)]);
-                epochCount = epochCount+EEG(iEEG).trials;
-                TMP = eeg_epoch2continuous(TMP);
-            else
-                % continuous data - need to re-extract data
-                TMP = pop_select(TMP, 'point', [sampleCount:(sampleCount+EEG(iEEG).pnts-1)]);
-                sampleCount = sampleCount+EEG(iEEG).pnts;
-            end
-            TMP = eeg_regepochs(TMP, g.epochrecur, g.epochlim);
-            disp('Warning: continuous data, extracting 1-second epochs'); 
-            if iEEG == 1, 
-                XX = TMP.data;
-                newTrialInfo = g.trialinfo(iEEG);
-                newTrialInfo(1:size(TMP.data,3)) = g.trialinfo(iEEG);
-            else
-                XX(:,:,end+1:end+size(TMP.data,3)) = TMP.data;
-                newTrialInfo(end+1:end+size(TMP.data,3)) = g.trialinfo(iEEG);
-            end
-        end
-        g.trialinfo = newTrialInfo;
-        X = XX;
-    end
-end
+    if EEG(1).trials == 1 || strcmpi(g.continuous, 'on')
+        TMP = EEG(1);
+        TMP.data = X;
+        TMP.icaweights = [];
+        TMP.icasphere  = [];
+        TMP.icawinv    = [];
+        TMP.icaact     = [];
+        TMP.icachansind = [];
+        TMP.trials = size(TMP.data,3);
+        TMP.pnts   = size(TMP.data,2);
+        TMP.event  = [];
+        TMP.epoch  = [];
+        for index = 1:length(boundaries)
+            TMP.event(index).type = 'boundary';
+            TMP.event(index).latency = boundaries(index);
+        end;
+        TMP = eeg_checkset(TMP);
+        if TMP.trials > 1
+            TMP = eeg_epoch2continuous(TMP);
+        end;
+        TMP = eeg_regepochs(TMP, g.epochrecur, g.epochlim);
+        disp('Warning: continuous data, extracting 1-second epochs'); 
+        X = TMP.data;
+    end;
+end;
 
 % compute spectral decomposition
 % ------------------------------
-if strcmpi(g.logtrials, 'notset'), if strcmpi(g.specmode, 'fft') g.logtrials = 'on'; else g.logtrials = 'off'; end; end
-if strcmpi(g.logtrials, 'on'), datatype = 'SPECTRUMLOG'; else datatype = 'SPECTRUMABS'; end
+if strcmpi(g.logtrials, 'notset'), if strcmpi(g.specmode, 'fft') g.logtrials = 'on'; else g.logtrials = 'off'; end; end;
+if strcmpi(g.logtrials, 'on'), datatype = 'SPECTRUMLOG'; else datatype = 'SPECTRUMABS'; end;
 if strcmpi(g.specmode, 'psd')
     if strcmpi(g.savetrials, 'on') || strcmpi(g.logtrials, 'on')
-        fprintf('Computing spectopo accross trials: ');
         for iTrial = 1:size(X,3)
-            [XX(:,:,iTrial), f] = spectopo(X(:,:,iTrial), size(X,2), EEG(1).srate, 'plot', 'off', 'boundaries', boundaries, 'nfft', g.nfft, 'verbose', 'off', spec_opt{:});
-            if iTrial == 1 && size(X,3) > 1, XX(:,:,size(X,3)) = 0; end
-            if mod(iTrial,10) == 0, fprintf('%d ', iTrial); end
-        end
-        fprintf('\n');
+            [XX(:,:,iTrial), f] = spectopo(X(:,:,iTrial), size(X,2), EEG(1).srate, 'plot', 'off', 'boundaries', boundaries, 'nfft', g.nfft, spec_opt{:});
+            if iTrial == 1, XX(:,:,size(X,3)) = 0; end;
+        end;
         if strcmpi(g.logtrials, 'off')
              X = 10.^(XX/10);
         else X = XX;
-        end
+        end;
         if strcmpi(g.savetrials, 'off')
             X = mean(X,3);
-        end
+        end;
     else
-        [X, f] = spectopo(X, size(X,2), EEG(1).srate, 'plot', 'off', 'boundaries', boundaries, 'nfft', g.nfft, 'verbose', 'off', spec_opt{:});
+        [X, f] = spectopo(X, size(X,2), EEG(1).srate, 'plot', 'off', 'boundaries', boundaries, 'nfft', g.nfft, spec_opt{:});
         X = 10.^(X/10);
-    end
+    end;
 elseif strcmpi(g.specmode, 'pmtm')
     if strcmpi(g.logtrials, 'on')
         error('Log trials option cannot be used in conjunction with the PMTM option');
-    end
-    if all([ EEG.trials ] == 1) && ~isempty(boundaries), disp('Warning: multitaper does not take into account boundaries in continuous data (use ''psd'' method instead)'); end
+    end;
+    if all([ EEG.trials ] == 1) && ~isempty(boundaries), disp('Warning: multitaper does not take into account boundaries in continuous data'); end;
     fprintf('Computing spectrum using multitaper method:');
     for cind = 1:size(X,1)
         fprintf('.');
@@ -333,65 +290,46 @@ elseif strcmpi(g.specmode, 'pmtm')
             [tmpdat f] = pmtm(X(cind,:,tind), g.nw, g.nfft, EEG.srate);
             if cind == 1 && tind == 1
                 X2 = zeros(size(X,1), length(tmpdat), size(X,3));
-            end
+            end;
             X2(cind,:,tind) = tmpdat;
-        end
-    end
+        end;
+    end;
     fprintf('\n');
     X = X2;
-    if strcmpi(g.savetrials, 'off'), X = mean(X,3); end
+    if strcmpi(g.savetrials, 'off'), X = mean(X,3); end;
 elseif strcmpi(g.specmode, 'pburg')
     if strcmpi(g.logtrials, 'on')
         error('Log trials option cannot be used in conjunction with the PBURB option');
-    end
+    end;
     fprintf('Computing spectrum using Burg method:');
-    if all([ EEG.trials ] == 1) && ~isempty(boundaries), disp('Warning: pburg does not take into account boundaries in continuous data (use ''psd'' method instead)'); end
+    if all([ EEG.trials ] == 1) && ~isempty(boundaries), disp('Warning: pburg does not take into account boundaries in continuous data'); end;
     for cind = 1:size(X,1)
         fprintf('.');
         for tind = 1:size(X,3)
             [tmpdat f] = pburg(X(cind,:,tind), g.burgorder, g.nfft, EEG.srate);
             if cind == 1 && tind == 1
                 X2 = zeros(size(X,1), length(tmpdat), size(X,3));
-            end
+            end;
             X2(cind,:,tind) = tmpdat;
-        end
-    end
+        end;
+    end;
     fprintf('\n');
     X = X2;
-    if strcmpi(g.savetrials, 'off'), X = mean(X,3); end
+    if strcmpi(g.savetrials, 'off'), X = mean(X,3); end;
 else % fft mode
-    %
-    if size(X,3) > 1
-        for iTrial = 1:size(X,3)
-            X(:,:,iTrial) = detrend(X(:,:,iTrial)')';
-        end
-    else
-        X = detrend(X')';
-    end
-    try
-        X = bsxfun(@times, X, hamming(size(X,2))'); % apply hamming window even for data trials (not the case in EEGLAB 13)
-    catch
-        X = bsxfun(@times, X, hamming2(size(X,2))');
-    end
-    disp('Warning: std_spec function computation has changed since version 13 (see help message)');
-    %end
-    if all([ EEG.trials ] == 1) && ~isempty(boundaries), disp('Warning: fft does not take into account boundaries in continuous data (use ''psd'' method instead)'); end
+    if oritrials == 1 || strcmpi(g.continuous, 'on')
+        X = bsxfun(@times, X, hamming(size(X,2))');
+    end;
+    if all([ EEG.trials ] == 1) && ~isempty(boundaries), disp('Warning: fft does not take into account boundaries in continuous data'); end;
     tmp   = fft(X, g.nfft, 2);
     f     = linspace(0, EEG(1).srate/2, floor(size(tmp,2)/2));
     f     = f(2:end); % remove DC (match the output of PSD)
     tmp   = tmp(:,2:floor(size(tmp,2)/2),:);
-    if strcmpi(g.output, 'power')
-        X     = tmp.*conj(tmp);
-        if strcmpi(g.logtrials, 'on'),  X = 10*log10(X); end
-    else
-        X = tmp;
-        datatype = 'SPECTRUMFFT';
-    end
-end
-eeglab_options;
-if option_single
-    X = single(X);
-end
+    X     = tmp.*conj(tmp);
+    if strcmpi(g.logtrials, 'on'),  X = 10*log10(X); end;
+    if strcmpi(g.savetrials, 'off'), X = mean(X,3); end;
+    if strcmpi(g.logtrials, 'off'),  X = 10*log10(X); end;
+end;
 
 % Save SPECs in file (all components or channels)
 % -----------------------------------------------
@@ -399,16 +337,16 @@ fileNames = computeFullFileName( { EEG.filepath }, { EEG.filename });
 if strcmpi(g.savefile, 'on')
     options = { options{:} spec_opt{:} 'timerange' g.timerange 'nfft' g.nfft 'specmode' g.specmode };
     if strcmpi(prefix, 'comp')
-        savetofile( filename, f, X, 'comp', 1:size(X,1), options, {}, fileNames, g.trialindices, datatype , g.trialinfo);
+        savetofile( filename, f, X, 'comp', 1:size(X,1), options, {}, fileNames, g.trialindices, datatype);
     else
         if ~isempty(g.interp)
-            savetofile( filename, f, X, 'chan', 1:size(X,1), options, { g.interp.labels }, fileNames, g.trialindices, datatype , g.trialinfo);
+            savetofile( filename, f, X, 'chan', 1:size(X,1), options, { g.interp.labels }, fileNames, g.trialindices, datatype);
         else
             tmpchanlocs = EEG(1).chanlocs;
-            savetofile( filename, f, X, 'chan', 1:size(X,1), options, { tmpchanlocs.labels }, fileNames, g.trialindices, datatype , g.trialinfo);
-        end
-    end
-end
+            savetofile( filename, f, X, 'chan', 1:size(X,1), options, { tmpchanlocs.labels }, fileNames, g.trialindices, datatype);
+        end;
+    end;
+end;
 return;
 
 % compute full file names
@@ -416,61 +354,26 @@ return;
 function res = computeFullFileName(filePaths, fileNames);
 for index = 1:length(fileNames)
     res{index} = fullfile(filePaths{index}, fileNames{index});
-end
+end;
 
 % -------------------------------------
 % saving SPEC information to Matlab file
 % -------------------------------------
-function savetofile(filename, f, X, prefix, comps, params, labels, dataFiles, dataTrials, datatype , trialInfo);
+function savetofile(filename, f, X, prefix, comps, params, labels, dataFiles, dataTrials, datatype);
     
     disp([ 'Saving SPECTRAL file ''' filename '''' ]);
     allspec = [];
     for k = 1:length(comps)
         allspec = setfield( allspec, [ prefix int2str(comps(k)) ], squeeze(X(k,:,:)));
-    end
+    end;
     if nargin > 6 && ~isempty(labels)
         allspec.labels = labels;
-    end
+    end;
     allspec.freqs      = f;
     allspec.parameters = params;
     allspec.datatype   = datatype;
     allspec.datafiles   = dataFiles;
     allspec.datatrials  = dataTrials;
-    allspec.trialinfo   = trialInfo;
     allspec.average_spec = mean(X,1);
     std_savedat(filename, allspec);
-    
-% -------------------------------------    
-% Adapted from Octave version
-% -------------------------------------
-function c = hamming2(m, opt)
-
-if (nargin < 1 || nargin > 2)
-    help hamming;
-    return;
-end
-
-if (~(isscalar (m) && (m == fix (m)) && (m > 0)))
-    error ('hamming: M must be a positive integer');
-end
-
-N = m - 1;
-if (nargin == 2)
-    switch (opt)
-        case 'periodic'
-            N = m;
-        case 'symmetric'
-            % Default option, same as no option specified.
-        otherwise
-            error ('hamming: window type must be either "periodic" or "symmetric"');
-    end
-end
-
-if (m == 1)
-    c = 1;
-else
-    m = m - 1;
-    c = 0.54 - 0.46 * cos (2 * pi * (0 : m)' / N);
-end
-
 

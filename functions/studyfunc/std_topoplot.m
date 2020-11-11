@@ -44,30 +44,19 @@
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, June 07, 2005, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function STUDY = std_topoplot(STUDY, ALLEEG,  varargin)
 icadefs;
@@ -86,7 +75,7 @@ for k = 3:2:nargin
                     cls = 2:length(STUDY.cluster);
                 end
             else
-                if ischar(varargin{k-1}) && strcmpi(varargin{k-1}, 'all')
+                if isstr(varargin{k-1}) & strcmpi(varargin{k-1}, 'all')
                     cls = 2:length(STUDY.cluster);
                 else
                     error('std_topoplot: ''clusters'' input takes either specific clusters (numeric vector) or keyword ''all''.');
@@ -95,9 +84,9 @@ for k = 3:2:nargin
         case 'plotsubjects' % legacy
             mode = 'apart';
         case 'comps'
-            if ischar( varargin{k-1} ), mode = 'apart'; 
+            if isstr( varargin{k-1} ), mode = 'apart'; 
             else STUDY = std_plotcompmap(STUDY, ALLEEG,  cls, varargin{k-1}); return;
-            end
+            end;
         case 'mode' % Plotting mode 'together' / 'apart'
             mode = varargin{k-1};
         case 'figure'
@@ -116,20 +105,20 @@ if isempty(cls)
     cls = 2:length(STUDY.cluster); % plot all clusters in STUDY
     for k = 1: length(cls)
         % don't include 'Notclust' clusters
-        if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) && ~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)
+        if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) & ~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)
             tmp = [tmp cls(k)];
         end
     end
     cls = tmp;
-end
+end;
 
 % Plot all the components in the cluster
 disp('Drawing components of cluster (all at once)...');
-if ~isfield(STUDY.cluster,'topo'), STUDY.cluster(1).topo = []; end
+if ~isfield(STUDY.cluster,'topo'), STUDY.cluster(1).topo = []; end;
 for clus = 1: length(cls) % For each cluster requested
     if isempty(STUDY.cluster(cls(clus)).topo)
         STUDY = std_readtopoclust(STUDY,ALLEEG, cls(clus));
-    end
+    end;
 end
 if strcmpi(mode, 'apart')         
     for clus = 1: length(cls) % For each cluster requested
@@ -151,14 +140,14 @@ if strcmpi(mode, 'apart')
                     figure(h_topo);
                     sbplot(rowcols(1),rowcols(2),k+2) , 
                     toporeplot(scalpmap, 'style', 'both', 'plotrad',0.5,'intrad',0.5, 'verbose', 'off','xsurface', Xi, 'ysurface', Yi );
-                    title([subject '/' 'IC' num2str(comp)   ], 'interpreter', 'none');
+                    title([subject '/' 'ic' num2str(comp)   ], 'interpreter', 'none');
                     colormap(DEFAULT_COLORMAP);
                     %waitbar(k/(len+1),h_wait)
                 else %other sbplot rows
                     figure(h_topo)
                     sbplot(rowcols(1),rowcols(2),k+4) , 
                     toporeplot(scalpmap, 'style', 'both', 'plotrad',0.5,'intrad',0.5, 'verbose', 'off','xsurface', Xi, 'ysurface', Yi );
-                    title([subject '/' 'IC' num2str(comp)], 'interpreter', 'none');
+                    title([subject '/' 'ic' num2str(comp)], 'interpreter', 'none');
                     colormap(DEFAULT_COLORMAP);
                     %waitbar(k/(len+1),h_wait)
                 end
@@ -259,30 +248,19 @@ end
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, June 07, 2005, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function STUDY = std_plotcompmap(STUDY, ALLEEG, cls, varargin)
 icadefs;

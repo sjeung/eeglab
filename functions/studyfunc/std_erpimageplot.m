@@ -19,37 +19,26 @@
 
 % Copyright (C) Arnaud Delorme, arno@ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [STUDY, allitc, alltimes, allfreqs, pgroup, pcond, pinter, events] = std_erpimageplot(STUDY, ALLEEG, varargin)
 
 if nargin < 2
     help std_erpimageplot;
     return;
-end
+end;
 
 events = [];
 STUDY = pop_erpimparams(STUDY, 'default');
@@ -84,18 +73,18 @@ else
     
     if ~isempty(opt.topotime) && ~isempty(opt.topotrial)
         error('Cannot plot topography when ERP-image is in trial concatenation mode');
-    end
+    end;
     if ~isempty(opt.trialrange)
         error('Cannot select trial range when ERP-image is in trial concatenation mode');
-    end
+    end;
     if strcmpi(opt.groupstats, 'on') || strcmpi(opt.condstats, 'on') 
         disp('Warning: cannot perform statistics when ERP-image is in trial concatenation mode');
-    end
+    end;
     
     % options
     if ~isempty(opt.colorlimits), options = { 'caxis' opt.colorlimits opt.erpimageopt{:} };
     else                          options = { 'cbar' 'on' opt.erpimageopt{:}  };
-    end
+    end;
     
     if ~isempty(opt.channels)
         [STUDY allerpimage alltimes alltrials tmp events] = std_readersp(STUDY, ALLEEG, 'channels', opt.channels, 'infotype', 'erpim', 'subject', opt.subject, ...
@@ -114,16 +103,16 @@ else
         for iCond = 1:length(allconditions)
             for iGroup = 1:length(allgroups)
                 tmpevents = events{iCond, iGroup};
-                if isempty(tmpevents), tmpevents = zeros(1, size(allerpimage{iCond, iGroup},2)); end
+                if isempty(tmpevents), tmpevents = zeros(1, size(allerpimage{iCond, iGroup},2)); end;
                 subplot(length(allconditions), length(allgroups), (iCond-1)*length(allgroups) + iGroup);
                 
                 % use color scale for last plot
                 if ~isempty(opt.colorlimits) && iCond == length(allconditions) && iGroup == length(allgroups)
                     options = { options{:} 'cbar' 'on' };
-                end
+                end;
                 erpimage(allerpimage{iCond, iGroup}, tmpevents, alltimes, alltitles{iCond, iGroup}, params.smoothing, params.nlines, options{:});
-            end
-        end
+            end;
+        end;
         
     else
         for cInd = 1:length(opt.clusters)
@@ -142,16 +131,16 @@ else
             for iCond = 1:length(allconditions)
                 for iGroup = 1:length(allgroups)
                     tmpevents = events{iCond, iGroup};
-                    if isempty(tmpevents), tmpevents = zeros(1, size(allerpimage{iCond, iGroup},2)); end
+                    if isempty(tmpevents), tmpevents = zeros(1, size(allerpimage{iCond, iGroup},2)); end;
                     subplot(length(allconditions), length(allgroups), (iCond-1)*length(allgroups) + iGroup);
                     
                     % use color scale for last plot
                     if ~isempty(opt.colorlimits) && iCond == length(allconditions) && iGroup == length(allgroups)
                         options = { options{:} 'cbar' 'on' };
-                    end
+                    end;
                     erpimage(allerpimage{iCond, iGroup}, tmpevents, alltimes, alltitles{iCond, iGroup}, params.smoothing, params.nlines, options{:});
-                end
-            end
-        end
-    end
-end
+                end;
+            end;
+        end;
+    end;
+end;

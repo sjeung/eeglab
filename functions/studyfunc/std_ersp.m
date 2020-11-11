@@ -52,8 +52,7 @@
 %                  dataset given as input.
 %  'savetrials'  - ['on'|'off'] save single-trials ERSP. Requires a lot of disk
 %                  space (dataset space on disk times 10) but allow for refined
-%                  single-trial statistics. This option is obsolete as
-%                  trials are now always saved.
+%                  single-trial statistics.
 %  'savefile'    - ['on'|'off'] save file or simply return measures.
 %                  Default is to save files ('on').
 %  'getparams'   - ['on'|'off'] return optional parameters for the newtimef 
@@ -81,8 +80,10 @@
 %   'alpha'      - If in (0, 1), compute two-tailed permutation-based 
 %                  probability thresholds and use these to mask the output 
 %                  ERSP/ITC images {default: NaN}
-%   'powbase'    - Deprecated. Note that baseline can be readjusted after 
-%                  computation as single trial spectral decompositions are stored.
+%   'powbase'    - [ncomps,nfreqs] optional input matrix giving baseline power 
+%                  spectra (not dB power, see >> help timef). 
+%                  For use in repeated calls to timef() using the same baseine
+%                  {default|[] -> none; data windows centered before 0 latency}
 %
 % Other optional inputs:
 %   This function will take any of the newtimef() optional inputs (for instance
@@ -122,56 +123,45 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, October 11, 2004, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [X, times, logfreqs, parameters] = std_ersp(EEG, varargin)
 
 if nargin < 1
     help std_ersp;
     return;
-end
+end;
 
 X = [];
 options = {};
 if length(varargin) > 1 
-    if ~ischar(varargin{1})
-        if length(varargin) > 0, options = { options{:} 'components' varargin{1} }; end
-        if length(varargin) > 1, options = { options{:} 'freqs'      varargin{2} }; end
-        if length(varargin) > 2, options = { options{:} 'timewindow' varargin{3} }; end
-        if length(varargin) > 3, options = { options{:} 'cycles'     varargin{4} }; end
-        if length(varargin) > 4, options = { options{:} 'padratio'   varargin{5} }; end
-        if length(varargin) > 5, options = { options{:} 'alpha'      varargin{6} }; end
-        if length(varargin) > 6, options = { options{:} 'type'       varargin{7} }; end
-        if length(varargin) > 7, options = { options{:} 'powbase'    varargin{8} }; end
+    if ~isstr(varargin{1})
+        if length(varargin) > 0, options = { options{:} 'components' varargin{1} }; end;
+        if length(varargin) > 1, options = { options{:} 'freqs'      varargin{2} }; end;
+        if length(varargin) > 2, options = { options{:} 'timewindow' varargin{3} }; end;
+        if length(varargin) > 3, options = { options{:} 'cycles'     varargin{4} }; end;
+        if length(varargin) > 4, options = { options{:} 'padratio'   varargin{5} }; end;
+        if length(varargin) > 5, options = { options{:} 'alpha'      varargin{6} }; end;
+        if length(varargin) > 6, options = { options{:} 'type'       varargin{7} }; end;
+        if length(varargin) > 7, options = { options{:} 'powbase'    varargin{8} }; end;
     else
         options = varargin;
-    end
-end
+    end;
+end;
 
-[g, timefargs] = finputcheck(options, { ...
+[g timefargs] = finputcheck(options, { ...
                         'components'    'integer'               []          [];
                         'channels'      { 'cell','integer' }    { [] [] }   {};
                         'powbase'       'real'                  []          [];
@@ -181,28 +171,24 @@ end
                         'recompute'     'string'      { 'on','off' }        'off';
                         'getparams'     'string'      { 'on','off' }        'off';
                         'savefile'      'string'      { 'on','off' }        'on';
-                        'parallel'      'string'      { 'on','off' }        'on';
                         'timewindow'    'real'                  []          [];    % ignored, deprecated
                         'fileout'       'string'                []          '';
                         'timelimits'    'real'                  []          [EEG(1).xmin EEG(1).xmax]*1000;
                         'cycles'        'real'                  []          [3 .5];
                         'padratio'      'real'                  []          1;
-                        'trialinfo'     'struct'                []          struct([]);
                         'freqs'         'real'                  []          [0 EEG(1).srate/2];
                         'rmcomps'       'cell'                  []          cell(1,length(EEG));
                         'interp'        'struct'                { }         struct([]);
                         'freqscale'     'string'                []         'log';
                         'alpha'         'real'                  []          NaN;
-                        'baseline'      'real'                  []          0;
                         'type'          'string'      { 'ersp','itc','both','ersp&itc' }  'both'}, 'std_ersp', 'ignore');
-if ischar(g), error(g); end
-if isempty(g.trialindices), g.trialindices = cell(length(EEG)); end
-if ~iscell(g.trialindices), g.trialindices = { g.trialindices }; end
-if ~isempty(g.powbase), disp('''powbase'' parameter is no longer supported at computation time'); end
+if isstr(g), error(g); end;
+if isempty(g.trialindices), g.trialindices = cell(length(EEG)); end;
+if ~iscell(g.trialindices), g.trialindices = { g.trialindices }; end;
 
 % checking input parameters
 % -------------------------
-if isempty(g.components) && isempty(g.channels)
+if isempty(g.components) & isempty(g.channels)
     if isempty(EEG(1).icaweights)
         error('EEG.icaweights not found');
     end
@@ -212,7 +198,7 @@ end
 
 % select ICA components or data channels
 % --------------------------------------
-if isempty(g.fileout), g.fileout = fullfile(EEG(1).filepath, EEG(1).filename(1:end-4)); end
+if isempty(g.fileout), g.fileout = fullfile(EEG(1).filepath, EEG(1).filename(1:end-4)); end;
 if ~isempty(g.components)
     g.indices = g.components;
     prefix = 'comp';
@@ -221,7 +207,7 @@ if ~isempty(g.components)
     filenametrials = [ g.fileout '.icatimef' ];    
     if ~isempty(g.channels)
         error('Cannot compute ERSP/ITC for components and channels at the same time');
-    end
+    end;
 elseif ~isempty(g.channels)
     if iscell(g.channels)
         if ~isempty(g.interp)
@@ -231,24 +217,45 @@ elseif ~isempty(g.channels)
             for ind = 2:length(EEG)
                 if ~isequal(eeg_chaninds(EEG(ind), g.channels, 0), g.indices)
                     error([ 'Channel information must be consistant when ' 10 'several datasets are merged for a specific design' ]);
-                end
-            end
-        end
+                end;
+            end;
+        end;
     else
         g.indices = g.channels;
-    end
+    end;
     prefix = 'chan';
     filenameersp   = [ g.fileout '.datersp'  ];
     filenameitc    = [ g.fileout '.datitc'   ];
     filenametrials = [ g.fileout '.dattimef' ];    
+end;
+
+powbaseexist = 1; % used also later
+if isempty(g.powbase) | isnan(g.powbase)
+    powbaseexist = 0;
+    g.powbase = NaN*ones(length(g.indices),1);  % default for timef()
+end;
+if size(g.powbase,1) ~= length(g.indices)
+    error('powbase should be of size (ncomps,nfreqs)');
 end
 
 % Check if ERSP/ITC information found in datasets and if fits requested parameters 
 % ----------------------------------------------------------------------------
-if exist( filenameersp ) && strcmpi(g.recompute, 'off')
-    fprintf('Use existing file for ERSP: %s; check the ''recompute checkbox'' to force recomputing.\n', filenameersp);
+if exist( filenameersp ) & strcmpi(g.recompute, 'off')
+    fprintf('Use existing file for ERSP: %s\n', filenameersp);
     return;
-end
+end;
+%    tmpersp  = load( '-mat', filenameersp, 'parameters'); % AND IT SHOULD BE USED HERE TOO - ARNO
+%	params   = struct(tmpersp.parameters{:});
+%    if ~isequal(params.cycles, g.cycles)                   ...
+%            | (g.padratio ~= params.padratio) ...
+%            | ( (g.alpha~= params.alpha) & ~( isnan(g.alpha) & isnan(params.alpha)) )
+%        % if not computed with the requested parameters, recompute ERSP/ITC
+%        % i.e., continue
+%    else
+%        disp('File ERSP/ITC data already present, computed with the same parameters: no need to recompute...');
+%        return; % no need to compute ERSP/ITC
+%    end
+%end;
 
 % Compute ERSP parameters
 % -----------------------
@@ -263,9 +270,12 @@ end
 parameters = { parameters{:} 'freqs' g.freqs };
 if strcmpi(g.plot, 'off')
     parameters = { parameters{:} 'plotersp', 'off', 'plotitc', 'off', 'plotphase', 'off' };
+end;
+if powbaseexist & time_range(1) >= 0 
+    parameters{end+1} = 'baseboot';
+    parameters{end+1} = 0;
+    fprintf('No pre-0 baseline spectral estimates: Using whole epoch for timef() "baseboot"\n');
 end
-parameters{end+1} = 'baseline';
-parameters{end+1} = g.baseline;
 
 % return parameters
 % -----------------
@@ -273,17 +283,42 @@ if strcmpi(g.getparams, 'on')
     X = []; times = []; logfreqs = [];
     if strcmpi(g.savetrials, 'on')
         parameters = { parameters{:} 'savetrials', g.savetrials };
-    end
+    end;
     return;
-end
+end;
+
+% No usable ERSP/ITC information available
+% ---------------------------------
+% tmpdata = [];
+% for index = 1:length(EEG)
+%     if isstr(EEG(index).data)
+%         TMP = eeg_checkset( EEG(index), 'loaddata' );  % load EEG.data and EEG.icaact
+%     else
+%         TMP = EEG;
+%     end
+%     if ~isempty(g.components)
+%         if isempty(TMP.icaact)                      % make icaact if necessary
+%             TMP.icaact = (TMP.icaweights*TMP.icasphere)* ...
+%                           reshape(TMP.data(TMP.icachansind,:,:), [ length(TMP.icachansind) size(TMP.data,2)*size(TMP.data,3) ]);
+%         end;
+%         tmpdata    = reshape(TMP.icaact, [ size(TMP.icaact,1) size(TMP.data,2) size(TMP.data,3) ]);
+%         tmpdata    = tmpdata(g.indices, :,:);
+%     else
+%         if isempty(tmpdata)
+%             tmpdata = TMP.data(g.indices,:,:);
+%         else    
+%             tmpdata(:,:,end+1:end+size(TMP.data,3)) = TMP.data(g.indices,:,:);
+%         end;
+%     end;
+% end;
 
 options = {};
-if ~isempty(g.rmcomps), options = { options{:} 'rmcomps' g.rmcomps }; end
-if ~isempty(g.interp),  options = { options{:} 'interp' g.interp }; end
+if ~isempty(g.rmcomps), options = { options{:} 'rmcomps' g.rmcomps }; end;
+if ~isempty(g.interp),  options = { options{:} 'interp' g.interp }; end;
 if isempty(g.channels)
      X = eeg_getdatact(EEG, 'component', g.indices, 'trialindices', g.trialindices );
 else X = eeg_getdatact(EEG, 'channel'  , g.indices, 'trialindices', g.trialindices, 'rmcomps', g.rmcomps, 'interp', g.interp);
-end
+end;
 
 % frame range
 % -----------
@@ -291,93 +326,112 @@ pointrange1 = round(max((g.timelimits(1)/1000-EEG(1).xmin)*EEG(1).srate, 1));
 pointrange2 = round(min(((g.timelimits(2)+1000/EEG(1).srate)/1000-EEG(1).xmin)*EEG(1).srate, EEG(1).pnts));
 pointrange = [pointrange1:pointrange2];
 
-% Compute ERSP && ITC
+% Compute ERSP & ITC
 % ------------------
-allTrialsTmp   = cell(1,length(g.indices));
-allTrialsTime  = cell(1,length(g.indices));
-allTrialsFreqs = cell(1,length(g.indices));
-eeglab_options;
-usesingle = option_single;
-
-% CHANGE THE LINE BELOW TO PARFOR TO USE THE PARALLEL TOOLBOX
-disp('Computing time/frequency decomposition...');
-numWorkers = 0;
-if strcmpi(g.parallel, 'on') && ~exist('parpool')
-    poolobj = gcp('nocreate');
-    if ~isempty(poolobj)
-        numWorkers = poolobj.NumWorkers;
-    end
-elseif strcmpi(g.parallel, 'on')
-    try
-        myCluster = parcluster('local');
-        numWorkers = myCluster.NumWorkers;
-    catch, disp('Cound not start parallel job'); end
-end
-%parfor (k = 1:length(g.indices),numWorkers)  % for each (specified) component/channel
-for k = 1:length(g.indices)
-    tmpparams = parameters;
-    if length(g.indices) > 1
-        tmpparams{end+1} = 'verbose';
-        tmpparams{end+1} = 'off';
-    end
+all_ersp   = [];
+all_trials = [];
+all_itc    = [];
+for k = 1:length(g.indices)  % for each (specified) component
+    if k>size(X,1), break; end; % happens for components
+    if powbaseexist
+        tmpparams = parameters;
+        tmpparams{end+1} = 'powbase';
+        tmpparams{end+1} = g.powbase(k,:);
+    else
+        tmpparams = parameters;
+    end;
     
     % Run timef() to get ERSP
     % ------------------------
     timefdata  = reshape(X(k,pointrange,:), 1, length(pointrange)*size(X,3));
-    mytimes = [];
-    mylogfreqs = [];
-    alltfX   = [];
-    if ~isempty(timefdata)
-        [logersp,logitc,logbase,mytimes,mylogfreqs,logeboot,logiboot,alltfX] ...
-              = newtimef( timefdata, length(pointrange), g.timelimits, EEG(1).srate, tmpparams{2:end});
-        %figure; newtimef( TMP.data(32,:), EEG.pnts, [EEG.xmin EEG.xmax]*1000, EEG.srate, cycles, 'freqs', freqs);
-        %figure; newtimef( timefdata, length(pointrange), g.timelimits, EEG.srate, cycles, 'freqs', freqs);
-    end
-    %if strcmpi(g.plot, 'on'), return; end
-    if usesingle
-        alltfX = single(alltfX);
-    end
+    if strcmpi(g.plot, 'on'), figure; end;
+    flagEmpty = 0;
+    if isempty(timefdata)
+        flagEmpty = 1;
+        timefdata = rand(1,length(pointrange));
+    end;
+    [logersp,logitc,logbase,times,logfreqs,logeboot,logiboot,alltfX] ...
+          = newtimef( timefdata, length(pointrange), g.timelimits, EEG(1).srate, tmpparams{2:end});
+    %figure; newtimef( TMP.data(32,:), EEG.pnts, [EEG.xmin EEG.xmax]*1000, EEG.srate, cycles, 'freqs', freqs);
+    %figure; newtimef( timefdata, length(pointrange), g.timelimits, EEG.srate, cycles, 'freqs', freqs);
+    if flagEmpty
+        logersp = [];
+        logitc  = [];
+        logbase = [];
+        logeboot = [];
+        logiboot = [];
+        alltfX   = [];
+    end;
+    if strcmpi(g.plot, 'on'), return; end;
 
-    allTrialsTmp{k}   = single( alltfX );
-    allTrialsTime{k}  = mytimes;
-    allTrialsFreqs{k} = mylogfreqs;
+    all_ersp = setfield( all_ersp, [ prefix int2str(g.indices(k)) '_ersp'     ], single(logersp ));
+    all_ersp = setfield( all_ersp, [ prefix int2str(g.indices(k)) '_erspbase' ], single(logbase ));
+    all_ersp = setfield( all_ersp, [ prefix int2str(g.indices(k)) '_erspboot' ], single(logeboot));
+    all_itc  = setfield( all_itc , [ prefix int2str(g.indices(k)) '_itc'      ], single(logitc  ));
+    all_itc  = setfield( all_itc , [ prefix int2str(g.indices(k)) '_itcboot'  ], single(logiboot));
+
+    if strcmpi(g.savetrials, 'on')
+        all_trials = setfield( all_trials, [ prefix int2str(g.indices(k)) '_timef'     ], single( alltfX ));
+    end;
 end
-all_trials = [];
-for k = 1:length(g.indices)  % for each (specified) component/channel
-    all_trials = setfield( all_trials, [ prefix int2str(g.indices(k)) ], allTrialsTmp{k});
-end
-X = allTrialsTmp{1};
+X = logersp;
 
 % Save ERSP into file
 % -------------------
-logfreqs             = allTrialsFreqs{1};
-times                = allTrialsTime{1};
-all_trials.freqs     = allTrialsFreqs{1};
-all_trials.times     = allTrialsTime{1};
+all_ersp.freqs      = logfreqs;
+all_ersp.times      = times;
+all_ersp.datatype   = 'ERSP';
+all_ersp.datafiles  = computeFullFileName( { EEG.filepath }, { EEG.filename });
+all_ersp.datatrials = g.trialindices;
+
+all_itc.freqs       = logfreqs;
+all_itc.times       = times;
+all_itc.parameters  = parameters;
+all_itc.datatype    = 'ITC';
+all_itc.datafiles    = computeFullFileName( { EEG.filepath }, { EEG.filename });
+all_itc.datatrials   = g.trialindices;
+
+all_trials.freqs     = logfreqs;
+all_trials.times     = times;
 all_trials.parameters = { options{:} parameters{:} };
 all_trials.datatype   = 'TIMEF';
 all_trials.datafiles  = computeFullFileName( { EEG.filepath }, { EEG.filename });
 all_trials.datatrials = g.trialindices;
 
-all_trials.parameters = parameters;
+if powbaseexist
+    all_ersp.parameters = { parameters{:}, 'baseline', g.powbase };
+else
+    all_ersp.parameters = parameters;
+end;
 if ~isempty(g.channels)
     if ~isempty(g.interp)
-        all_trials.labels = { g.interp(g.indices).labels };
+        all_ersp.chanlabels   = { g.interp(g.indices).labels };
+        all_itc.chanlabels    = { g.interp(g.indices).labels };
+        all_trials.chanlabels = { g.interp(g.indices).labels };
     elseif ~isempty(EEG(1).chanlocs)
         tmpchanlocs = EEG(1).chanlocs;
-        all_trials.labels = { tmpchanlocs(g.indices).labels };
-    end
-end
-all_trials.trialinfo = g.trialinfo;
+        all_ersp.chanlabels   = { tmpchanlocs(g.indices).labels };
+        all_itc.chanlabels    = { tmpchanlocs(g.indices).labels };
+        all_trials.chanlabels = { tmpchanlocs(g.indices).labels };
+    end;
+end;
 
 if strcmpi(g.savefile, 'on')
-    std_savedat( filenametrials , all_trials );
-end
+    if strcmpi(g.type, 'both') | strcmpi(g.type, 'ersp') | strcmpi(g.type, 'ersp&itc')
+        std_savedat( filenameersp, all_ersp);
+    end;
+    if strcmpi(g.type, 'both') | strcmpi(g.type, 'itc') | strcmpi(g.type, 'ersp&itc')
+        std_savedat( filenameitc , all_itc );
+    end;
+    if strcmpi(g.savetrials, 'on')
+        std_savedat( filenametrials , all_trials );
+    end;
+end;
 
 % compute full file names
 % -----------------------
 function res = computeFullFileName(filePaths, fileNames);
 for index = 1:length(fileNames)
     res{index} = fullfile(filePaths{index}, fileNames{index});
-end
+end;
 

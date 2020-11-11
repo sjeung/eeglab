@@ -72,30 +72,19 @@
 
 % Copyright (C) Arnaud Delorme
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [pcond, pgroup, pinter, statscond, statsgroup, statsinter] = std_stat(data, varargin)
 
@@ -105,7 +94,7 @@ pinter = {};
 if nargin < 1
     help std_stat;
     return;
-end
+end;
 
 % decode inputs
 % -------------
@@ -114,22 +103,22 @@ if ~isempty(varargin) && isstruct(varargin{1})
     varargin(1) = [];
 else
     opt = [];
-end
+end;
 if ~isempty(varargin) ||isempty(opt);
     opt = pop_statparams(opt, varargin{:});
-end
+end;
 
-if ~isfield(opt, 'paired'), opt.paired = { 'off' 'off' }; end
-if ~isnan(opt.eeglab.alpha(1)) && isempty(opt.eeglab.naccu), opt.eeglab.naccu = 1/opt.eeglab.alpha(end)*2; end
-if any(any(cellfun('size', data, 2)==1)), opt.groupstats = 'off'; opt.condstats = 'off'; end
-if strcmpi(opt.eeglab.mcorrect, 'fdr'), opt.eeglab.naccu = opt.eeglab.naccu*20; end
-if isempty(opt.eeglab.naccu), opt.eeglab.naccu = 2000; end
+if ~isfield(opt, 'paired'), opt.paired = { 'off' 'off' }; end;
+if ~isnan(opt.eeglab.alpha(1)) && isempty(opt.eeglab.naccu), opt.eeglab.naccu = 1/opt.eeglab.alpha(end)*2; end;
+if any(any(cellfun('size', data, 2)==1)), opt.groupstats = 'off'; opt.condstats = 'off'; end;
+if strcmpi(opt.eeglab.mcorrect, 'fdr'), opt.eeglab.naccu = opt.eeglab.naccu*20; end;
+if isempty(opt.eeglab.naccu), opt.eeglab.naccu = 2000; end;
 if ~isreal(data{1})
     fprintf('*** ITC significance - converting complex values to absolute amplitude ***\n');
     for ind = 1:length(data(:))
         data{ind} = abs(data{ind});
-    end
-end
+    end;
+end;
 nc = size(data,1);
 ng = size(data,2);
 
@@ -146,119 +135,88 @@ if strcmpi(opt.mode, 'eeglab')
     % -----------------
     if strcmpi(opt.condstats, 'on') && nc > 1
         for g = 1:ng
-            [F, df, pval] = statcond(data(:,g), 'method', opt.eeglab.method, 'naccu', opt.eeglab.naccu, 'paired', opt.paired{1});
+            [F df pval] = statcond(data(:,g), 'method', opt.eeglab.method, 'naccu', opt.eeglab.naccu, 'paired', opt.paired{1});
             pcond{g}     = squeeze(pval);
             statscond{g} = squeeze(F);
-        end
-    end
+        end;
+    end;
     if strcmpi(opt.groupstats, 'on') && ng > 1
         for c = 1:nc
-            [F, df, pval] = statcond(data(c,:), 'method', opt.eeglab.method, 'naccu', opt.eeglab.naccu, 'paired', opt.paired{2});
+            [F df pval] = statcond(data(c,:), 'method', opt.eeglab.method, 'naccu', opt.eeglab.naccu, 'paired', opt.paired{2});
             pgroup{c}     = squeeze(pval);
             statsgroup{c} = squeeze(F);
-        end
-    end
-    if ( strcmpi(opt.groupstats, 'on') || strcmpi(opt.condstats, 'on') ) && ng > 1 && nc > 1
+        end;
+    else
+    end;
+    if ( strcmpi(opt.groupstats, 'on') && strcmpi(opt.condstats, 'on') ) & ng > 1 & nc > 1
         opt.paired = sort(opt.paired); % put 'off' first if present
-        [F, df, pval] = statcond(data, 'method', opt.eeglab.method, 'naccu', opt.eeglab.naccu, 'paired', opt.paired{1});
+        [F df pval] = statcond(data, 'method', opt.eeglab.method, 'naccu', opt.eeglab.naccu, 'paired', opt.paired{1});
         for index = 1:length(pval)
             pinter{index} = squeeze(pval{index});
             statsinter{index} = squeeze(F{index});
-        end
-    end
+        end;
+    end;
     
     if ~isempty(opt.groupstats) || ~isempty(opt.condstats)
         if ~strcmpi(opt.eeglab.mcorrect, 'none'),
             disp([ 'Applying ' upper(opt.eeglab.mcorrect) ' correction for multiple comparisons' ]);
-            for ind = 1:length(pcond),  pcond{ind}  = mcorrect( pcond{ind} , opt.eeglab.mcorrect ); end
-            for ind = 1:length(pgroup), pgroup{ind} = mcorrect( pgroup{ind}, opt.eeglab.mcorrect ); end
+            for ind = 1:length(pcond),  pcond{ind}  = mcorrect( pcond{ind} , opt.eeglab.mcorrect ); end;
+            for ind = 1:length(pgroup), pgroup{ind} = mcorrect( pgroup{ind}, opt.eeglab.mcorrect ); end;
             if ~isempty(pinter),
                 pinter{1} = mcorrect(pinter{1}, opt.eeglab.mcorrect);
                 pinter{2} = mcorrect(pinter{2}, opt.eeglab.mcorrect);
                 pinter{3} = mcorrect(pinter{3}, opt.eeglab.mcorrect);
-            end
-        end
+            end;
+        end;
         if ~isnan(opt.eeglab.alpha)
-            for ind = 1:length(pcond),  pcond{ind}  = applythreshold(pcond{ind},  opt.eeglab.alpha); end
-            for ind = 1:length(pgroup), pgroup{ind} = applythreshold(pgroup{ind}, opt.eeglab.alpha); end
-            for ind = 1:length(pinter), pinter{ind} = applythreshold(pinter{ind}, opt.eeglab.alpha); end
-        end
-    end
+            for ind = 1:length(pcond),  pcond{ind}  = applythreshold(pcond{ind},  opt.eeglab.alpha); end;
+            for ind = 1:length(pgroup), pgroup{ind} = applythreshold(pgroup{ind}, opt.eeglab.alpha); end;
+            for ind = 1:length(pinter), pinter{ind} = applythreshold(pinter{ind}, opt.eeglab.alpha); end;
+        end;
+    end;
 else
-    if ~exist('ft_freqstatistics'), error('Install Fieldtrip-lite to use Fieldtrip statistics'); end
+    if ~exist('ft_freqstatistics'), error('Install Fieldtrip-lite to use Fieldtrip statistics'); end;
 
     % Fieldtrip statistics
     % --------------------
     params = {};
     if strcmpi(opt.fieldtrip.mcorrect, 'cluster')
         params = eval( [ '{' opt.fieldtrip.clusterparam '}' ]);
-        if isempty(opt.fieldtrip.channelneighbor), opt.fieldtrip.channelneighbor = struct([]); end
+        if isempty(opt.fieldtrip.channelneighbor), opt.fieldtrip.channelneighbor = struct([]); end;
         params = { params{:} 'neighbours' opt.fieldtrip.channelneighbor }; % channelneighbor is empty if only one channel selected
-    end
+    end;
     params = { params{:} 'method', opt.fieldtrip.method, 'naccu', opt.fieldtrip.naccu 'mcorrect' opt.fieldtrip.mcorrect 'alpha' opt.fieldtrip.alpha 'numrandomization' opt.fieldtrip.naccu };
-    params = { params{:} 'structoutput' 'on' }; % before if ~isnan(opt.fieldtrip.alpha), end
+    params = { params{:} 'structoutput' 'on' }; % before if ~isnan(opt.fieldtrip.alpha), end;
     
-    pinter = cell(1,3);
-    statsinter = cell(1,3);
     if strcmpi(opt.condstats, 'on') && nc > 1
-        newdata = data(:,1);
         for g = 1:ng
-            % marginal effect
-            [F, df, pval]  = statcondfieldtrip(data(:,g), 'paired', opt.paired{1}, params{:});
+            [F df pval]  = statcondfieldtrip(data(:,g), 'paired', opt.paired{1}, params{:});
             pcond{g}     = applymask( F, opt.fieldtrip);
             statscond{g} = squeeze(F.stat);
-            
-            % concatenate data for main statistics
-            if g > 1 && ng > 1
-                for c = 1:nc
-                    switch ndims(data{1,1})
-                        case 2, newdata{c,1}(:,end+1:end+size(data{c,g},2)) = data{c,g};
-                        case 3, newdata{c,1}(:,:,end+1:end+size(data{c,g},3)) = data{c,g};
-                        case 4, newdata{c,1}(:,:,:,end+1:end+size(data{c,g},4)) = data{c,g};
-                    end
-                end
-            end
-        end
-        
-        % main statistics
-        if ng > 1
-            [F, df, pval] = statcondfieldtrip(newdata, 'paired', opt.paired{1}, params{:});
-            pinter{1}     = applymask(F, opt.fieldtrip);
-            statsinter{1} = squeeze(F.stat);
-        end
+        end;
     else
         pcond = {};
-    end
+    end;
     if strcmpi(opt.groupstats, 'on') && ng > 1
-        newdata = data(1,:);
         for c = 1:nc
-            % marginal effect
-            [F, df, pval]   = statcondfieldtrip(data(c,:), 'paired', opt.paired{2}, params{:});
+            [F df pval]   = statcondfieldtrip(data(c,:), 'paired', opt.paired{2}, params{:});
             pgroup{c}     = applymask( F, opt.fieldtrip);
             statsgroup{c} = squeeze(F.stat);
-            
-            % concatenate data for main statistics
-            if c > 1 && nc > 1
-                for g = 1:ng
-                    switch ndims(data{1,1})
-                        case 2, newdata{1,g}(:,end+1:end+size(data{c,g},2)) = data{c,g};
-                        case 3, newdata{1,g}(:,:,end+1:end+size(data{c,g},3)) = data{c,g};
-                        case 4, newdata{1,g}(:,:,:,end+1:end+size(data{c,g},4)) = data{c,g};
-                    end
-                end
-            end
-        end
-        
-        % main statistics
-        if nc > 1
-            [F, df, pval] = statcondfieldtrip(newdata, 'paired', opt.paired{1}, params{:});
-            pinter{2}     = applymask(F, opt.fieldtrip);
-            statsinter{2} = squeeze(F.stat);
-        end
+        end;
     else
         pgroup = {};
-    end
-end
+    end;
+    if ( strcmpi(opt.groupstats, 'on') && strcmpi(opt.condstats, 'on') ) & ng > 1 & nc > 1
+        opt.paired  = sort(opt.paired); % put 'off' first if present
+        [F df pval] = statcondfieldtrip(data, 'paired', opt.paired{1}, params{:});
+        for index = 1:length(pval)
+            pinter{index}     = applymask(F{inter}, opt.fieldtrip);
+            statsinter{index} = squeeze(F.stat{index});
+        end;
+    else
+        pinter = {};
+    end;
+end;
 
 % apply mask for fieldtrip data
 % -----------------------------
@@ -269,8 +227,8 @@ else
     p = squeeze(F.pval);
     if ~strcmpi(fieldtrip.mcorrect, 'none')
         p(~F.mask) = 1;
-    end
-end
+    end;
+end;
 
 % apply stat threshold to data for EEGLAB stats
 % ---------------------------------------------
@@ -282,7 +240,7 @@ for index = 1:length(threshold)
     inds = data < threshold(index);
     data(inds)    = 1;
     newdata(inds) = length(threshold)-index+1;
-end
+end;
 
 % compute correction for multiple comparisons
 % -------------------------------------------
@@ -294,5 +252,5 @@ switch method
     case 'holms',     [tmp ind] = sort(pvals(:)); [tmp ind2] = sort(ind); pvals(:) = pvals(:).*(prod(size(pvals))-ind2+1);
     case 'fdr',       pvals = fdr(pvals);
     otherwise error(['Unknown method ''' method ''' for correction for multiple comparisons' ]);
-end        
+end;        
         

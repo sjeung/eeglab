@@ -7,11 +7,10 @@
 % Inputs:
 %   ALLEEG           - a vector of loaded EEG dataset structures of all sets 
 %                      in the STUDY set.
-%   icathreshold     - Threshold to compare icaweights. Default 2e-4.
+%   icathreshold     - Threshold to compare icaweights
 %
 % Outputs:
 %   cluster - cell array of groups of datasets
-%   indices - cluster index for each dataset
 %
 % Authors:  Arnaud Delorme, SCCN, INC, UCSD, July 2009-
 % 2016 change: as of May 2016, the function now compares the product of the
@@ -20,44 +19,32 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 % Coding notes: Useful information on functions and global variables used.
 
-function [cluster, inds] = std_findsameica(ALLEEG, varargin)
+function cluster = std_findsameica(ALLEEG, varargin);
 
 % 6/2/2014 Ramon : Allow ica threshold as input.
 if nargin == 1
-    icathreshold = 2e-4;
-elseif nargin == 2
+    icathreshold = 2e-5;
+elseif nargin == 2;
     icathreshold = varargin{1};
 end
     
 cluster = { [1] };
-inds = [1];
 for index = 2:length(ALLEEG)
     
     found = 0;
@@ -68,14 +55,12 @@ for index = 2:length(ALLEEG)
             %if isequal(ALLEEG(cluster{c}(1)).icaweights, ALLEEG(index).icaweights) 
             if sum(sum(abs(w1-w2))) < icathreshold
                 cluster{c}(end+1) = index;
-                inds(index) = c;
                 found = 1;
                 break;
-            end
-        end
-    end
+            end;
+        end;
+    end;
     if ~found
         cluster{end+1} = index;
-        inds(index) = index;
-    end
-end
+    end;
+end;

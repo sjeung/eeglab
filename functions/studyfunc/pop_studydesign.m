@@ -13,30 +13,19 @@
 
 % Copyright (C) Arnaud Delorme & Scott Makeig, SCCN/INC/UCSD, October 11, 2004, smakeig@ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [STUDY allcom] = pop_studydesign(STUDY, ALLEEG, designind, varargin);  
     
@@ -44,16 +33,12 @@ allcom = '';
 if nargin < 2
     help pop_studydesign;
     return;
-end
+end;
 
-if ~ischar(STUDY) && isfield(STUDY, 'currentdesign') && STUDY.currentdesign > length(STUDY.design)
-    STUDY.currentdesign = length(STUDY.design);
-end
-
-if nargin < 3 && ~ischar(STUDY)
+if nargin < 3 && ~isstr(STUDY)
     
     %% create GUI
-    [ usrdat.factors usrdat.factorvals usrdat.factsubj usrdat.pairing] = std_getindvar(STUDY, 'both', 1);
+    [ usrdat.factors usrdat.factorvals usrdat.factsubj] = std_getindvar(STUDY, 'both', 1);
     
     usrdat.factors     = { 'None' usrdat.factors{:} };
     usrdat.factorvals  = { {}     usrdat.factorvals{:} };
@@ -63,149 +48,159 @@ if nargin < 3 && ~ischar(STUDY)
     usrdat.design      = STUDY.design;
     usrdat.filepath    = STUDY.filepath;
     for ind = 1:length(usrdat.design)
-        for iVar = length(usrdat.design(ind).variable):-1:1
-            if isempty(usrdat.design(ind).variable(iVar).label)
-                usrdat.design(ind).variable(iVar) = [];
-            end
-        end
-    end
+        usrdat.design(ind).deletepreviousfiles = 0;
+    end;
     
-    % check numerical variables
+    % build menu
+    popupselectsubj = { 'Select all subjects' };
     for ind1 = 1:length(usrdat.factors)
-        if all(cellfun(@isnumeric, usrdat.factorvals{ind1}))
-             usrdat.numerical(ind1) = 1;
-        else usrdat.numerical(ind1) = 0;
-        end
-    end
-        
-    cb_selectsubj   = 'pop_studydesign(''selectsubj'', gcbf);';
-    cb_setsubj      = 'pop_studydesign(''setsubj'', gcbf);';
-    cb_rename       = 'pop_studydesign(''rename'', gcbf);';
-    cb_add          = 'pop_studydesign(''add'', gcbf);';
-    cb_del          = 'pop_studydesign(''del'', gcbf);';
+        if ~isempty(usrdat.factsubj{ind1})
+            if any(cellfun(@length, usrdat.factsubj{ind1}) ~= length(usrdat.subjects))
+                for ind2 = 1:length(usrdat.factorvals{ind1})
+                    if ~iscell(usrdat.factorvals{ind1}{ind2}) % not a combined value
+                        tmpval = encodevals(usrdat.factorvals{ind1}(ind2));
+                        popupselectsubj{end+1} = [ num2str(usrdat.factors{ind1}) ' - ' tmpval{1} ];
+                    end;
+                end;
+            end;
+        end;
+    end;
+    
+    cb_rename = 'pop_studydesign(''rename'', gcbf);';
+    cb_add    = 'pop_studydesign(''add'', gcbf);';
+    cb_del    = 'pop_studydesign(''del'', gcbf);';
     cb_listboxfact1 = 'pop_studydesign(''selectfact'', gcf, 0);';
     cb_listboxfact2 = 'pop_studydesign(''selectfact'', gcf, 1);';
-    cb_lbval        = 'pop_studydesign(''updategui'', gcbf);';
+    cb_selectsubj   = 'pop_studydesign(''selectsubj'', gcbf);';
+    cb_combinevals1 = 'pop_studydesign(''combinevals'', gcbf, 0);';
+    cb_combinevals2 = 'pop_studydesign(''combinevals'', gcbf, 1);';
+    cb_lbval        = 'pop_studydesign(''updatedesign'', gcbf);';
     cb_selectdesign = 'pop_studydesign(''selectdesign'', gcbf);';
     cb_selectdata   = 'pop_studydesign(''selectdatatrials'', gcbf);';
     cb_selectfolder = 'pop_studydesign(''selectfolder'', gcbf);';
-    cb_setfolder    = 'pop_studydesign(''updategui'', gcbf);';
-    cb_newvar       = 'pop_studydesign(''newvar'', gcbf);';
-    cb_editvar      = 'pop_studydesign(''editvar'', gcbf);';
-    cb_delvar       = 'pop_studydesign(''delvar'', gcbf);';
-    cb_list         = 'pop_studydesign(''list'', gcbf);';
-    cb_plotdmat     = 'pop_studydesign(''plotdmat'', gcbf);';
-    cb_importgvar   = 'pop_studydesign(''importgvar'', gcbf);';
-    
-    icadefs;
-%               { 'style' 'text'       'string' 'Subjects' 'fontweight' 'bold' } ...
-%               { 'style' 'listbox'    'string' usrdat.subjects 'tag' 'lbsubj' 'min' 0 'max' 2 'value' 1 'callback' cb_selectsubj } ...
-    uilist = { ...
-               { 'style' 'text'       'string' 'Include these subjects (default: all)' 'fontweight' 'bold' } ...
-               { 'style' 'edit'       'string' '' 'tag' 'subjects' 'callback' cb_setsubj } ...
-               { 'style' 'pushbutton' 'string' '...' 'callback' cb_selectsubj } ...
-               { 'style' 'text'       'string' 'Design name' 'fontweight' 'bold' } ...
+    cb_setfolder    = 'pop_studydesign(''updatedesign'', gcbf);';
+    uilist = { { 'style' 'text'       'string' 'Select STUDY design' 'fontweight' 'bold' } ...
                { 'style' 'listbox'    'string' { usrdat.design.name } 'tag' 'listboxdesign' 'callback' cb_selectdesign 'value' STUDY.currentdesign } ...
-               { 'style' 'pushbutton' 'string' 'New'    'callback' cb_add } ...
-               { 'style' 'pushbutton' 'string' 'Rename' 'callback' cb_rename } ...
-               { 'style' 'pushbutton' 'string' 'Delete' 'callback' cb_del } ...
-               ...
-               { 'panel' 'title' 'Edit the independent variables for this design' 'fontweight' 'bold' 'backgroundcolor' GUIBACKCOLOR } ...
-               { 'style' 'text'       'string' '' 'fontweight' 'bold' } ...
-               { 'style' 'pushbutton' 'string' 'New' 'callback' cb_newvar } ...
-               { 'style' 'pushbutton' 'string' 'Edit'   'callback' cb_editvar } ...
-               { 'style' 'pushbutton' 'string' 'Delete' 'callback' cb_delvar } ...
-               { 'style' 'pushbutton' 'string' 'List factors' 'callback'  cb_list } ...
-               { 'style' 'listbox'    'string' ''  'tag' 'lbfact0' 'value' 2 } ...
-               { 'style' 'checkbox'   'string' ' Re-save STUDY file (if saved previously)' 'tag' 'chk_save' 'value' 1 }  };
-%               { 'style' 'checkbox'   'string' 'Delete all pre-computed datafiles' 'tag' 'chk_del' 'callback' cb_lbval } };
+               { 'style' 'pushbutton' 'string' 'Add design'    'callback' cb_add } ...
+               { 'style' 'pushbutton' 'string' 'Rename design' 'callback' cb_rename } ...
+               { 'style' 'pushbutton' 'string' 'Delete design' 'callback' cb_del } ...
+               { 'style' 'text'       'string' 'Subjects' 'fontweight' 'bold' } ...
+               { 'style' 'text'       'string' 'Independent variable 1   ' 'fontweight' 'bold' } ...
+               { 'style' 'text'       'string' 'Independent variable 2   ' 'fontweight' 'bold' } ...
+               { 'style' 'listbox'    'string' usrdat.subjects 'tag' 'lbsubj' 'min' 0 'max' 2 'value' 1 'callback' cb_lbval } ...
+               { 'style' 'listbox'    'string' usrdat.factors  'tag' 'lbfact0' 'callback' cb_listboxfact1 'value' 2 } ...
+               { 'style' 'listbox'    'string' usrdat.factors  'tag' 'lbfact1' 'callback' cb_listboxfact2 'value' 1 } ...
+               { 'style' 'text'       'string' 'Ind. var. 1 values ' } ...
+               { 'style' 'text'       'string' 'Ind. var. 2 values' } ...
+               { 'style' 'listbox'    'string' '' 'tag' 'lbval0' 'min' 0 'max' 2 'callback' cb_lbval } ...
+               { 'style' 'listbox'    'string' '' 'tag' 'lbval1' 'min' 0 'max' 2 'callback' cb_lbval } ...
+               { 'style' 'popupmenu'  'string' popupselectsubj 'tag' 'popupselect' 'callback' cb_selectsubj } ...
+               { 'style' 'pushbutton' 'string' 'Combine selected values' 'tag' 'combine1' 'callback' cb_combinevals1 } ...
+               { 'style' 'pushbutton' 'string' 'Combine selected values' 'tag' 'combine2' 'callback' cb_combinevals2 } ...
+               { 'style' 'popupmenu'  'string' 'Paired statistics|Unpaired statistics' 'tag' 'lbpair0' 'callback' cb_lbval } ...
+               { 'style' 'popupmenu'  'string' 'Paired statistics|Unpaired statistics' 'tag' 'lbpair1' 'callback' cb_lbval } ...
+               { 'style' 'pushbutton' 'string' 'Use only specific datasets/trials' 'callback' cb_selectdata } ...
+               { 'style' 'edit'       'string' '' 'tag' 'edit_selectdattrials' 'callback' cb_lbval } ...
+               { 'style' 'text'       'string' 'Store pre-computed files in folder' } ...
+               { 'style' 'edit'       'string' '' 'tag' 'edit_storedir' 'callback' cb_setfolder } ...
+               { 'style' 'pushbutton' 'string' '...' 'callback' cb_selectfolder } ...
+               { 'style' 'checkbox'   'string' 'Delete all pre-computed datafiles associated with this specific STUDY design' 'tag' 'chk_del' 'callback' cb_lbval } ...
+               { 'style' 'checkbox'   'string' 'Save the STUDY' 'tag' 'chk_save' 'value' 1 } };
 %               { 'style' 'checkbox'  'string' 'Paired statistics' 'tag' 'lbpair0' 'callback' cb_lbval } ...
 %               { 'style' 'checkbox'  'string' 'Paired statistics' 'tag' 'lbpair1' 'callback' cb_lbval } ...
-%               { 'style' 'pushbutton' 'string' 'Plot'   'callback' cb_plotdmat} ...
 
-    ht = 11.5;
-    h2 = 1.1;
-    h1 = 1.5;
-    geometry = { {3 ht [1    1]    [2 1] } ...
-                 {3 ht [2.55 1]    [1 1] } ...
-                 {3 ht [3.6  1]    [0.4 1] } ...
-                 ...
-                 {3 ht [1    h1+1]    [1 1] } ...
-                 {3 ht [1    h1+2]    [3 2.6] } ...
-                 {3 ht [2.85 h1+1.15] [0.4  1] } ... % Edit
-                 {3 ht [3.15 h1+1.15] [0.5  1] } ... % Raname
-                 {3 ht [3.55 h1+1.15] [0.45 1] } ... % Delete
-                 ...
-                 {3 ht [1    h2+5.4] [3 5.1] } ...
-                 {3 ht [1.07 h2+6  ] [1 1] } ...      % Indep variables 
-                 {3 ht [2.20 h2+6.2] [0.4  1] } ...    % New
-                 {3 ht [2.50 h2+6.2] [0.4  1] } ...    % Edit
-                 {3 ht [2.80 h2+6.2] [0.45 1] } ...   % Delete
-                 {3 ht [3.15 h2+6.2] [0.75 1] } ...   % List var
-                 {3 ht [1.07 h2+7  ] [2.85 3] } ...   % listbox variable
-                 {3 ht [1    h2+11 ] [3 1] } ...
+    geometry = { {3 18 [1 1] [2 1] } ...
+                 {3 18 [1 2] [2 3] } ...
+                 {3 18 [3 2] [1 1] } ...
+                 {3 18 [3 3] [1 1] } ...
+                 {3 18 [3 4] [1 1] } ...
+                 {3 18 [1 5] [1 1] } ...
+                 {3 18 [2 5] [1 1] } ...
+                 {3 18 [3 5] [1 1] } ...
+                 {3 18 [1 6] [1 8] } ...
+                 {3 18 [2 6] [0.98 3] } ...
+                 {3 18 [3 6] [0.98 3] } ...
+                 {3 18 [2 9] [1 1] } ...
+                 {3 18 [3 9] [1 1] } ...
+                 {3 18 [2 10] [0.98 3] } ...
+                 {3 18 [3 10] [0.98 3] } ...
+                 {3 18 [1 14] [1 1] } ...
+                 {3 18 [2 13] [1 1] } ...
+                 {3 18 [3 13] [1 1] } ...
+                 {3 18 [2 14] [1 1] } ...
+                 {3 18 [3 14] [1 1] } ...
+                 {3 18 [1    15.5] [1.3 1] } ...
+                 {3 18 [2.25 15.5] [1.7 1] } ...
+                 {3 18 [1    16.5] [1.3 1] } ...
+                 {3 18 [2.25 16.5] [1.2 1] } ...
+                 {3 18 [3.45 16.5] [0.55 1] } ...
+                 {3 18 [1 17.5] [3 1] } ...
+                 {3 18 [1 19] [3 1] } ...
                  };
-%                 {3 ht [3.3  6+h2]   [0.5 1] } ...    % Subject text
-%                 {3 ht [3.3  7+h2  ] [0.7 3] } ...    % listbox subject  
-% {3 ht [1    9.8+h2] [3 1] } ...
 
     for i = 1:length(geometry), geometry{i}{3} = geometry{i}{3}-1; end;            
     streval = [ 'pop_studydesign(''selectdesign'', gcf);' ];    
     [tmp usrdat tmp2 result] = inputgui('uilist', uilist, 'title', 'Edit STUDY design -- pop_studydesign()', 'helpbut', 'Web help', 'helpcom',  'web(''http://sccn.ucsd.edu/wiki/Chapter_03:_Working_with_STUDY_designs'', ''-browser'')', 'geom', geometry, 'userdata', usrdat, 'eval', streval);
-    if isempty(tmp), return; end
+    if isempty(tmp), return; end;
     
     % call std_makedesign
     % -------------------
     des    = usrdat.design;
     allcom = '';
     if length(des) < length(STUDY.design)
-        for index = length(STUDY.design):-1:length(des)+1
+        for index = length(des)+1:length(STUDY.design)
             fprintf('Deleting STUDY design %d\n', index);
-            com    = 'STUDY.design(index) = [];'; eval(com);
+            com    = 'STUDY.design(index).name = '';'; eval(com);
             allcom = [ allcom 10 com ];
-        end
-    end
+        end;
+    end;
     for index = 1:length(des)
-        tmpdes  = des(index);
-        if ~isfield(tmpdes.variable, 'vartype'), tmpdes.variable(1).vartype = []; end; 
-        if index > length(STUDY.design) || ~isequal(STUDY.design(index), tmpdes)
+        tmpdes  = rmfield(des(index), 'deletepreviousfiles');
+        rmfiles = fastif(des(index).deletepreviousfiles, 'limited', 'off');
+        if index > length(STUDY.design) || ~isequal(STUDY.design(index), tmpdes) || strcmpi(rmfiles, 'on')
             fprintf('Updating/creating STUDY design %d\n', index);
             
-            if isfield(tmpdes, 'variable')
-                for iVar = 1:length(tmpdes.variable)
-                    if isempty(tmpdes.variable(iVar).vartype)
-                        tmpdes.variable(iVar).vartype = 'categorical';
-                    end
-                end
-            end
-            
-            [STUDY com] = std_makedesign(STUDY, ALLEEG, index, tmpdes);
+            % test if file exist and issue warning
+            if length(STUDY.design) >= index && isfield('cell', STUDY.design) && ~isempty(STUDY.design(index).cell) && ...
+                ~isempty(dir([ STUDY.design(index).cell(1).filebase '.*' ])) &&  strcmpi(rmfiles, 'off')
+                if ~isequal(tmpdes.variable(1).label, STUDY.design(index).variable(1).label) || ...
+                     ~isequal(tmpdes.variable(2).label, STUDY.design(index).variable(2).label) || ...
+                      ~isequal(tmpdes.include, STUDY.design(index).include) || ...
+                       ~isequal(tmpdes.variable(1).value, STUDY.design(index).variable(1).value) || ...
+                        ~isequal(tmpdes.cases.value, STUDY.design(index).cases.value) || ...
+                         ~isequal(tmpdes.variable(2).value, STUDY.design(index).variable(2).value)
+                    res = questdlg2(strvcat([ 'Precomputed data files exist for design ' int2str(index) '.' ], ' ', ...
+                                       'Modifying this design without deleting the associated files', ...
+                                       'might mean that they will stay on disk and will be unusable'), ...
+                                       'STUDY design warning', 'Abort', 'Continue', 'Continue');
+                    if strcmpi(res, 'Abort'), return; end;
+                end;
+            end;
+            [STUDY com] = std_makedesign(STUDY, ALLEEG, index, tmpdes, 'delfiles', rmfiles);
             allcom = [ allcom 10 com ];
         else
             fprintf('STUDY design %d not modified\n', index);
-        end
-    end
+        end;
+    end;
     if result.listboxdesign ~= STUDY.currentdesign
         fprintf('Selecting STUDY design %d\n', result.listboxdesign);
         com = sprintf('STUDY = std_selectdesign(STUDY, ALLEEG, %d);', result.listboxdesign); eval(com);
         allcom = [ allcom 10 com ];
-    end
-    if result.chk_save == 1 && ~isempty(STUDY.filename)
+    end;
+    if result.chk_save == 1
         fprintf('Resaving STUDY\n');
         [STUDY ALLEEG com] = pop_savestudy(STUDY, ALLEEG, 'savemode', 'resave');
         allcom = [ allcom 10 com ];
-    end
-    if ~isempty(allcom), allcom(1) = []; end
+    end;
+    if ~isempty(allcom), allcom(1) = []; end;
     
-elseif ischar(STUDY)
+elseif isstr(STUDY)
     com = STUDY;
     fig = ALLEEG;
     usrdat = get(fig, 'userdata');
     datinfo  = usrdat.datasetinfo;
     des      = usrdat.design;
-    subjects = usrdat.subjects;
     filepath = usrdat.filepath;
-    val = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
     
     switch com
         % summary of callbacks
@@ -214,108 +209,215 @@ elseif ischar(STUDY)
         % case 'rename', Rename study design
         %
         % case 'selectdesign', select a specific design
-        % case 'updategui', update the study information (whenever the
+        % case 'updatedesign', update the study information (whenever the
         %                      user click on a button 
+        %
+        % case 'selectfact', select a specific ind. var. (update value listboxes)
+        % case 'combinevals', combine values in value listboxes
+        % case 'selectsubj', select specific subjects
         %
         % case 'selectdatatrials', new GUI to select specific dataset and trials
         % case 'selectdatatrialssel', % select in the GUI above
         % case 'selectdatatrialsadd', % add new selection in the GUI above
         
-        case 'selectsubj'
-            strSubj = get(findobj(fig, 'tag', 'subjects'), 'string');
-            if ~isempty(strSubj)
-                res = str2cell(strSubj);
-                selected = eeg_chaninds(struct('labels', subjects), res);
-            else
-                selected = 1:length(subjects);
-            end
-            [inds, strSubj, cellSubj] = pop_chansel(struct('labels', subjects), 'select', selected);
-            if ~isempty(inds)
-                if length(inds) == length(subjects)
-                    strSubj = '';
-                end
-                set(findobj(fig, 'tag', 'subjects'), 'string', strSubj);
-                disp('Warning: setting subjects for all designs');
-                for iDes = 1:length(des)
-                    des(iDes).cases.value = cellSubj;
-                end
-            end
+        case 'add', % Add new study design
+            inde  = find( cellfun(@isempty,{ des.name }));
+            if isempty(inde), inde = length(des)+1; end;
+            des(inde(1)) = des(1);
+            des(inde(1)).name = sprintf('Design %d', inde(1));
+            set(findobj(fig, 'tag', 'listboxdesign'), 'string', { des.name }, 'value', inde(1));
+            usrdat.design = des;
+        	set(fig, 'userdata', usrdat);
+            pop_studydesign( 'selectstudy', fig);
+            return;
             
-        case 'setsubj'
-            strSubj = get(findobj(fig, 'tag', 'subjects'), 'string');
-            res = str2cell(strSubj);
-            if ~isempty(setdiff(res, subjects))
-                set(findobj(fig, 'tag', 'subjects'), 'string', '');
-                warndlg2('Unknown subject(s) - check syntax');
-                res = subjects';
-            end
-            for iDes = 1:length(des)
-                des(iDes).cases.value = res;
-            end
-        
-        case 'add' % Add new study design
-            des(end+1) = des(val);
-            des(end).variable = [];
-            des(end).limo     = [];
-            des(end).name = sprintf('Design %d', length(des));
-            set(findobj(fig, 'tag', 'listboxdesign'), 'string', { des.name }, 'value', length(des));
-            
-        case 'del' % Delete study design
+        case 'del', % Delete study design
             val = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
             if val == 1
                 warndlg2('The first STUDY design cannot be removed, only modified');
                 return;
-            end
-            des(val) = [];
+            end;
+            des(val).name = '';
+            set(findobj(fig, 'tag', 'listboxdesign'), 'value', 1, 'string', { des.name } );
+            usrdat.design = des;
+        	set(fig, 'userdata', usrdat);
+            pop_studydesign( 'selectstudy', fig);
+            return;
             
-        case 'rename' % Rename study design
+        case 'rename', % Rename study design
             val        = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
             strs       = get(findobj(fig, 'tag', 'listboxdesign'), 'string');
             result     = inputdlg2( { 'Study design name:                                                                    ' }, ...
                                       'Rename Study Design', 1,  { strs{val} }, 'pop_studydesign');
-            if isempty(result), return; end
+            if isempty(result), return; end;
             des(val).name  = result{1};
-                      
-        case 'updategui' % update the study information (whenever the user click on a button)
-            val = min(val, length(des));
-            set(findobj(fig, 'tag', 'listboxdesign'), 'string', { des.name }, 'value', val );
+            set(findobj(fig, 'tag', 'listboxdesign'), 'string', { des.name } );
+            
+        case 'selectdesign', % select a specific design
+            val  = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
+            if isempty(des(val).name)
+                set(findobj(fig, 'tag', 'lbfact0'), 'string', '', 'value', 1);
+                set(findobj(fig, 'tag', 'lbfact1'), 'string', '', 'value', 1);
+                set(findobj(fig, 'tag', 'lbval0') , 'string', '', 'value', 1);
+                set(findobj(fig, 'tag', 'lbval1') , 'string', '', 'value', 1);
+                set(findobj(fig, 'tag', 'lbpair0'), 'value', 1);
+                set(findobj(fig, 'tag', 'lbpair1'), 'value', 1);
+                set(findobj(fig, 'tag', 'lbsubj') , 'value' , 1, 'string', '');
+                set(findobj(fig, 'tag', 'chk_del'), 'value', des(val).deletepreviousfiles );
+                set(findobj(fig, 'tag', 'edit_selectdattrials'), 'string', '' );
+                % do not change file path
+                return;
+            end;
+            val1 = strmatch(des(val).variable(1).label, usrdat.factors, 'exact'); if isempty(val1), val1 = 1; end;
+            val2 = strmatch(des(val).variable(2).label, usrdat.factors, 'exact'); if isempty(val2), val2 = 1; end;
+            set(findobj(fig, 'tag', 'lbfact0'), 'string', usrdat.factors, 'value', val1);
+            set(findobj(fig, 'tag', 'lbfact1'), 'string', usrdat.factors, 'value', val2);
+            valfact1 = strmatchmult(des(val).variable(1).value, usrdat.factorvals{val1});
+            valfact2 = strmatchmult(des(val).variable(2).value, usrdat.factorvals{val2});
+            if isempty(valfact1), listboxtop1 = 1; else listboxtop1 = valfact1(1); end;
+            if isempty(valfact2), listboxtop2 = 1; else listboxtop2 = valfact2(1); end;
+            set(findobj(fig, 'tag', 'lbval0'), 'string', encodevals(usrdat.factorvals{val1}), 'value', valfact1, 'listboxtop', listboxtop1);
+            set(findobj(fig, 'tag', 'lbval1'), 'string', encodevals(usrdat.factorvals{val2}), 'value', valfact2, 'listboxtop', listboxtop2);
+            valsubj = strmatchmult(des(val).cases.value, usrdat.subjects);
+            set(findobj(fig, 'tag', 'lbsubj'), 'string', usrdat.subjects, 'value', valsubj);
+            if isempty(des(val).include), str = ''; else str = vararg2str(des(val).include); end;
+            set(findobj(fig, 'tag', 'chk_del'), 'value', des(val).deletepreviousfiles );
+            set(findobj(fig, 'tag', 'edit_selectdattrials'), 'string', str );
+            set(findobj(fig, 'tag', 'popupselect'), 'value', 1 );
+            set(findobj(fig, 'tag', 'lbpair0'), 'value', fastif(isequal(des(val).variable(1).pairing,'on'),1,2));
+            set(findobj(fig, 'tag', 'lbpair1'), 'value', fastif(isequal(des(val).variable(2).pairing,'on'),1,2));
+            if ~isfield(des, 'filepath') || isempty(des(val).filepath), des(val).filepath = ''; end;
             set(findobj(fig, 'tag', 'edit_storedir'), 'string', des(val).filepath);
-            set(findobj(fig, 'tag', 'edit_selectdattrials'),  'string', vararg2str( des(val).include ));
             
-            % update subjects
-            if length(des(val).cases.value) ~= length(subjects)
-                tmp = des(val).cases.value;
-                tmp = cellfun(@(x) [ x ' ' ], tmp, 'uniformoutput', false);
-                subjectStr = [tmp{:}];
-                set(findobj(fig, 'tag', 'subjects'), 'string', subjectStr);
-            end
+        case 'updatedesign', % update the study information (whenever the user click on a button)
+            val    = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
+            val1   = get(findobj(fig, 'tag', 'lbfact0'), 'value');
+            val2   = get(findobj(fig, 'tag', 'lbfact1'), 'value');
+            valf1  = get(findobj(fig, 'tag', 'lbval0'),  'value');
+            valf2  = get(findobj(fig, 'tag', 'lbval1'),  'value');
+            valp1  = get(findobj(fig, 'tag', 'lbpair0'), 'value');
+            valp2  = get(findobj(fig, 'tag', 'lbpair1'), 'value');
+            vals   = get(findobj(fig, 'tag', 'lbsubj'),  'value');
+            valchk = get(findobj(fig, 'tag', 'chk_del'), 'value');
+            filep  = get(findobj(fig, 'tag', 'edit_storedir'), 'string');
+            strs   = get(findobj(fig, 'tag', 'edit_selectdattrials'),  'string');
+            valpaired = { 'on' 'off' };
             
-            % categorical var
-            curVal = {};
-            for iVar = 1:length(des(val).variable)
-                if ~isempty(des(val).variable(iVar).value) && strcmpi(des(val).variable(iVar).vartype, 'categorical')
-                    valStr = '';
-                    valStrCell = encodevals(des(val).variable(iVar).value);
-                    for iVal = 1:length(valStrCell)
-                        valStr = [ valStr sprintf('%s - ', valStrCell{iVal}) ];
-                    end
-                    valStr(end-2:end) = [];
-                    strCond = sprintf('Categorical variable: %s - Values (%s)', des(val).variable(iVar).label, valStr);
-                else
-                    strCond = sprintf('Continuous variable: %s', des(val).variable(iVar).label);
-                end
-                curVal{end+1} = strCond;
-
-            end
-            curValLbfact = get(findobj(fig, 'tag', 'lbfact0'), 'value');
-            valVar = min(curValLbfact, length(des(val).variable(iVar)));
-            if isequal(valVar, 0), valVar = []; end
-            if isempty(valVar) && ~isempty(curVal), valVar = 1; end
-            set(findobj(fig, 'tag', 'lbfact0'), 'string', curVal, 'value', valVar);
+            if ~strcmpi(des(val).variable(1).label, usrdat.factors{val1})
+                des(val).variable(1).label = usrdat.factors{val1};
+                des(val).variable(1).value = usrdat.factorvals{val1}(valf1);
+            end;
+            if ~strcmpi(des(val).variable(2).label, usrdat.factors{val2})
+                des(val).variable(2).label = usrdat.factors{val2};
+                des(val).variable(2).value = usrdat.factorvals{val2}(valf2);
+            end;
+            if ~isequal(mysort(des(val).variable(1).value), mysort(usrdat.factorvals{val1}(valf1)))
+                des(val).variable(1).value = usrdat.factorvals{val1}(valf1);
+            end;
+            if ~isequal(mysort(des(val).variable(2).value), mysort(usrdat.factorvals{val2}(valf2)))
+                des(val).variable(2).value = usrdat.factorvals{val2}(valf2);
+            end;
+            if ~isequal(mysort(des(val).cases.value), mysort(usrdat.subjects(vals)))
+                des(val).cases.value = usrdat.subjects(vals);
+            end;
+            if ~isequal(des(val).variable(1).pairing, valpaired{valp1})
+                des(val).variable(1).pairing = valpaired{valp1};
+            end;
+            if ~isequal(des(val).variable(2).pairing, valpaired{valp2})
+                des(val).variable(2).pairing = valpaired{valp2};
+            end;
+            if ~isequal(des(val).deletepreviousfiles, valchk)
+                des(val).deletepreviousfiles = 1;
+            end;
+            if ~isfield(des, 'filepath') || ~isequal(des(val).filepath, filep)
+                des(val).filepath = filep;
+            end;
+            if ~isequal(des(val).include, strs)
+                try,
+                    des(val).include = eval( [ '{' strs '}' ]);
+                catch,
+                    disp('Error while decoding list of parameters');
+                    des(val).include = {};
+                    set(findobj(fig, 'tag', 'edit_selectdattrials'),  'string', '');
+                end;
+            end;
+            
+        case 'selectfact', % select a specific ind. var. (update value listboxes)
+            factval = designind;
+            val   = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
+            val1  = get(findobj(fig, 'tag', [ 'lbfact' num2str(factval) ]), 'value');
+            val2  = get(findobj(fig, 'tag', [ 'lbfact' num2str(~factval) ]), 'value');
+%             if val1 == val2 && val1 ~= 1
+%                 warndlg2('Cannot select twice the same independent variable');
+%                 val1 = 1;
+%                 set(findobj(fig, 'tag', [ 'lbfact' num2str(factval) ]), 'value', val1);
+%             end;
+            valfact = [1:length(usrdat.factorvals{val1})];
+            set(findobj(fig, 'tag', ['lbval' num2str(factval) ]), 'string', encodevals(usrdat.factorvals{val1}), 'value', valfact, 'listboxtop', 1);
+            pop_studydesign('updatedesign', fig);
             return;
             
-        case 'selectdatatrials' % select specific dataset and trials
-            usrdat.parent = fig;
+        case 'combinevals', %  combine values in value listboxes
+            factval = designind;
+            val1    = get(findobj(fig, 'tag', [ 'lbfact' num2str(factval) ]), 'value');
+            vals    = get(findobj(fig, 'tag', [ 'lbval'  num2str(factval) ]), 'value');
+            strs    = get(findobj(fig, 'tag', [ 'lbval'  num2str(factval) ]), 'string');
+            if length(vals) == 1
+                warndlg2('You need to select several values to combine them');
+                return;
+            end;
+            if ~iscell(usrdat.factorvals{val1})
+                warndlg2('Cannot combine values from numerical variables');
+                return;
+            end;
+            % combine values for string and integers
+            if isstr(usrdat.factorvals{val1}{1}) || iscell(usrdat.factorvals{val1}{1})
+                tmpcell = {};
+                for indCell = vals(:)'
+                    if iscell(usrdat.factorvals{val1}{indCell})
+                        tmpcell = { tmpcell{:} usrdat.factorvals{val1}{indCell}{:} };
+                    else
+                        tmpcell = { tmpcell{:} usrdat.factorvals{val1}{indCell} };
+                    end;
+                end;
+                usrdat.factorvals{val1}{end+1} = unique_bc(tmpcell);
+            else
+                usrdat.factorvals{val1}{end+1} = unique_bc([ usrdat.factorvals{val1}{vals} ]);
+            end;
+            set(findobj(fig, 'tag', ['lbval' num2str(factval) ]), 'string', encodevals(usrdat.factorvals{val1}));
+            
+        case 'selectsubj', % select specific subjects
+            val = get(findobj(fig, 'tag', 'popupselect'), 'value');
+            str = get(findobj(fig, 'tag', 'popupselect'), 'string');
+            str = str{val};
+            if val == 1, 
+                subjbox = get(findobj(fig, 'tag', 'lbsubj'), 'string');
+                set(findobj(fig, 'tag', 'lbsubj'), 'value', [1:length(subjbox)]);
+                return;
+            end;
+            indunders = findstr( ' - ', str);
+            factor    = str(1:indunders-1);
+            factorval = str(indunders+3:end);
+            
+            % select subjects
+            eval( [ 'allsetvals = { datinfo.' factor '};' ]);
+            indset = strmatch(factorval, allsetvals, 'exact');
+            subjects = unique_bc( { datinfo(indset).subject } );
+            
+            % change the subject listbox
+            val     = get(findobj(fig, 'tag', 'popupselect'), 'value');
+            subjbox = get(findobj(fig, 'tag', 'lbsubj'), 'string');
+            indsubj = [];
+            for ind = 1:length(subjects);
+                indsubj(ind) = strmatch(subjects{ind}, subjbox, 'exact');
+            end;
+            set(findobj(fig, 'tag', 'lbsubj'), 'value', indsubj);
+            set(findobj(fig, 'tag', 'popupselect'), 'value', 1);
+            pop_studydesign('updatedesign', fig);
+            return;
+            %set(findobj(get(gcbf, ''userdata''), ''tag'', ''edit_selectdattrials''
+            
+        case 'selectdatatrials', % select specific dataset and trials
             cb_sel = 'pop_studydesign(''selectdatatrialssel'',gcbf);';
             cb_add = 'pop_studydesign(''selectdatatrialsadd'',gcbf);';
             uilist = { { 'style' 'text'    'string' strvcat('Press ''Add'' to add data', 'selection. Multiple variables', 'are combined using AND.') } ...
@@ -329,9 +431,10 @@ elseif ischar(STUDY)
             usrdat.fig = fig;
             inputgui('uilist', uilist, 'geometry', { [1] [1] [1] [1] [1] }, 'geomvert', [2 1 2.5 1 2.5], ...
                 'helpcom', cb_add, 'userdata', usrdat, 'eval', cb_renamehelp);
+            pop_studydesign('updatedesign', fig);
             return;
             
-        case 'selectdatatrialssel' % select in the GUI above
+        case 'selectdatatrialssel', % select in the GUI above
             val1  = get(findobj(fig, 'tag', 'lbfact2'), 'value');
             valfact = [1:length(usrdat.factorvals{val1})];
             tmpval = get(findobj(fig, 'tag', 'lbval2'), 'value');
@@ -339,123 +442,56 @@ elseif ischar(STUDY)
                 set(findobj(fig, 'tag', 'lbval2'), 'value', valfact, 'string', encodevals(usrdat.factorvals{val1}));
             else
                 set(findobj(fig, 'tag', 'lbval2'), 'string', encodevals(usrdat.factorvals{val1}), 'value', valfact);
-            end
+            end;
             return;
 
-        case 'selectdatatrialsadd' % Add button in the GUI above
-            val1    = get(findobj(fig, 'tag', 'lbfact2'), 'value');
-            val2    = get(findobj(fig, 'tag', 'lbval2') , 'value');
-            %close(fig);
-            fig     = usrdat.parent;
-            val     = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
-            des(val).include{end+1} = { usrdat.factors{val1} usrdat.factorvals{val1}(val2) };
-            
-        case 'updateinclude' % Add button in the GUI above
-            try
-                des(val).include = eval( get(findobj(fig, 'tag', 'lbfact2'), 'string') );
-            catch,
-                warndlg2('Syntax error');
-            end
-            
-        case 'selectfolder'
+        case 'selectfolder',
             res = uigetdir;
             if ~isempty(findstr(filepath, res)) && findstr(filepath, res) == 1 && ~isequal(filepath, res)
                 res = res(length(filepath)+2:end);
-            end
-            if res(1) == 0, return; end
-            des(val).filepath = res;
+            end;
+            if res(1) == 0, return; end;
+            set(findobj(fig, 'tag', 'edit_storedir'), 'string', res);
+            pop_studydesign('updatedesign', fig);
+            return;
             
-        case 'list'
-            val1   = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
-            val2   = get(findobj(fig, 'tag', 'lbfact0'), 'value');
-            pop_listfactors(des(val1));
-
-        case 'delvar'
-            val1   = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
-            val2   = get(findobj(fig, 'tag', 'lbfact0'), 'value');
-            des(val1).variable(val2) = [];
+        case 'selectdatatrialsadd', % Add button in the GUI above
+            val1    = get(findobj(fig, 'tag', 'lbfact2'), 'value');
+            val2    = get(findobj(fig, 'tag', 'lbval2') , 'value');
+            objedit = findobj(usrdat.fig, 'tag', 'edit_selectdattrials');
+            str     = get(objedit, 'string');
+            if ~isempty(str), str = [ str ',' ]; end;
+            set(objedit, 'string', [ str vararg2str( { usrdat.factors{val1} usrdat.factorvals{val1}(val2) }) ]);
+            return;
             
-        case 'newvar'
-            val    = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
-            [tmpVar tmpVarList cat] = pop_addindepvar(usrdat);
-            if ~isempty(tmpVar) && ~strcmp(tmpVar,'None')
-                des(val).variable(end+1).label = tmpVar;
-                des(val).variable(end  ).value = tmpVarList; % empty for cont var
-                if cat, des(val).variable(end).vartype = 'categorical'; else des(val).variable(end).vartype = 'continuous'; end
-            end
-            % update var list
-            [ usrdat.factors usrdat.factorvals usrdat.factsubj usrdat.pairing] = std_getindvar(struct('design', des, 'datasetinfo', datinfo), 'both', 1);
-            usrdat.factors     = { 'None' usrdat.factors{:} };
-            usrdat.factorvals  = { {}     usrdat.factorvals{:} };
-            usrdat.factsubj    = { {}     usrdat.factsubj{:} };
-            
-        case 'editvar'
-            val    = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
-            val2   = get(findobj(fig, 'tag', 'lbfact0'), 'value');
-            tmpval = des(val).variable(val2).value;
-            if strcmpi(des(val).variable(val2).vartype, 'continuous'), tmpval = []; end
-            [tmpVar tmpVarList cat] = pop_addindepvar(usrdat, [], des(val).variable(val2).label, tmpval);
-            if ~isempty(tmpVar) && ~strcmp(tmpVar,'None')
-                des(val).variable(val2).label = tmpVar;
-                des(val).variable(val2).value = tmpVarList; % empty for cont var
-                if cat, des(val).variable(val2).vartype = 'categorical'; else des(val).variable(val2).vartype = 'continuous'; end
-            end
-            % update var list
-            [ usrdat.factors usrdat.factorvals usrdat.factsubj usrdat.pairing] = std_getindvar(struct('design', des, 'datasetinfo', datinfo), 'both', 1);
-            usrdat.factors     = { 'None' usrdat.factors{:} };
-            usrdat.factorvals  = { {}     usrdat.factorvals{:} };
-            usrdat.factsubj    = { {}     usrdat.factsubj{:} };
-            
-        case 'plotdmat'
-            val    = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
-            std_plotdmat(usrdat.design(val),usrdat.datasetinfo);
-            
-        case 'importgvar'
-            val    = get(findobj(fig, 'tag', 'listboxdesign'), 'value');
-            usrdat = pop_importgroupvar(usrdat,val);
-            
-    end
-
+    end;
     usrdat.design = des;
-    set(fig, 'userdata', usrdat);
-    pop_studydesign( 'updategui', fig);
-    
-    if strcmpi(com, 'newvar')
-        set(findobj(fig, 'tag', 'lbfact0'), 'value', length(des(val).variable));
-    end
-end
+	set(fig, 'userdata', usrdat);
+end;
 
-function res = str2cell(strSubj)
-    res = textscan(strSubj, '%s');
-    res = res{1};
-    for iRes = 1:length(res)
-        res{iRes}(res{iRes} == '''') = [];
-    end
-    res = res';
-
-function res = strmatchmult(a, b)
-    if isempty(b), res = []; return; end
+function res = strmatchmult(a, b);
+    if isempty(b), res = []; return; end;
     res = zeros(1,length(a));
     for index = 1:length(a)
         tmpi = std_indvarmatch(a{index}, b);
         res(index) = tmpi(1); % in case there is a duplicate
-    end
+    end;
     %[tmp ind] = mysetdiff(b, a);
     %res = setdiff_bc([1:length(b)], ind);
 
 function cellarray = mysort(cellarray)
     return; % was crashing for combinations of selection
             % also there is no reason the order should be different
-    if ~isempty(cellarray) && ischar(cellarray{1})
+    if ~isempty(cellarray) && isstr(cellarray{1})
         cellarray = sort(cellarray);
-    end
+    end;
 
-function [cellout inds ] = mysetdiff(cell1, cell2)
-    if (~isempty(cell1) && ischar(cell1{1})) || (~isempty(cell2) && ischar(cell2{1}))
+function [cellout inds ] = mysetdiff(cell1, cell2);
+    if (~isempty(cell1) && isstr(cell1{1})) || (~isempty(cell2) && isstr(cell2{1}))
          [ cellout inds ] = setdiff_bc(cell1, cell2);
     else [ cellout inds ] = setdiff_bc([ cell1{:} ], [ cell2{:} ]);
          cellout = mattocell(cellout);
-    end
+    end;
 
 % encode string an numerical values for list boxes
 function cellout = encodevals(cellin)
@@ -465,15 +501,15 @@ function cellout = encodevals(cellin)
         cellout = { num2str(cellin) };
     elseif ischar(cellin{1}) || iscell(cellin{1})
         for index = 1:length(cellin)
-            if ischar(cellin{index})
+            if isstr(cellin{index})
                 cellout{index} = cellin{index};
             else
                 cellout{index} =  cellin{index}{1};
                 for indcell = 2:length(cellin{index})
                     cellout{index} = [ cellout{index} ' & ' cellin{index}{indcell} ];
-                end
-            end
-        end
+                end;
+            end;
+        end;
     else
         for index = 1:length(cellin)
             if length(cellin{index}) == 1
@@ -482,7 +518,7 @@ function cellout = encodevals(cellin)
                 cellout{index} =  num2str(cellin{index}(1));
                 for indcell = 2:length(cellin{index})
                     cellout{index} = [ cellout{index} ' & ' num2str(cellin{index}(indcell)) ];
-                end
-            end
-        end
-    end
+                end;
+            end;
+        end;
+    end;

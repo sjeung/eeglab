@@ -62,37 +62,26 @@
 
 % Copyright (C) Arnaud Delorme & Scott Makeig, SCCN/INC/UCSD, October 11, 2004, smakeig@ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [STUDY, ALLEEG] = std_editset(STUDY, ALLEEG, varargin) 
 
 if (nargin < 3)
     help std_editset;
     return;
-end
+end;
 
 % decode input parameters
 % -----------------------
@@ -108,9 +97,9 @@ g = finputcheck(varargin, { 'updatedat' 'string'  { 'on','off' }  'off';
                             'rmclust'   'string'  { 'on','off' }  'on';
                             'inbrain'   'string'  { 'on','off' }  'off';
                             'commands'  'cell'    {}              {} }, 'std_editset');
-if ischar(g), error(g); end
+if isstr(g), error(g); end;
 
-if isempty(STUDY), STUDY.history = 'STUDY = [];'; end
+if isempty(STUDY), STUDY.history = 'STUDY = [];'; end;
 if ~isempty(g.name),  STUDY.name  = g.name; end
 if ~isempty(g.task),  STUDY.task  = g.task; end
 if ~isempty(g.notes), STUDY.notes = g.notes; end
@@ -125,9 +114,9 @@ if ~isempty(ALLEEG)
         if any(cellfun( @isempty, allchanlocs))
             error( [ 'Some datasets have channel locations and some other don''t' 10 ...
                      'the STUDY is not homogenous and cannot be created.' ]);
-        end
-    end
-end
+        end;
+    end;
+end;
 
 % make one cell array with commands
 % ---------------------------------
@@ -140,13 +129,13 @@ if ~isempty(g.commands)
             if ~isempty(indindex)
                  tmpcom = { 'index' g.commands{k}{2*(indindex-1)+1+1} g.commands{k}{:} };
             else tmpcom = g.commands{k}; 
-            end
+            end;
             allcoms = { allcoms{:} tmpcom{:} };
-        end
+        end;
     else 
         allcoms = g.commands;
-    end
-end
+    end;
+end;
 g.commands = allcoms;
 
 % add 'dipselect' command if 'inbrain' option is selected
@@ -155,12 +144,12 @@ dipselectExists = false;
 for k = 1:2:length(g.commands)
     if strcmp(g.commands{k},'dipselect')
        dipselectExists = true;
-    end
-end
+    end;
+end;
 if strcmp(g.inbrain,'on') && ~dipselectExists
     g.commands{length(g.commands)+1} = 'dipselect';
     g.commands{length(g.commands)+1} = 0.15;
-end
+end;
 
 % copy values
 % -----------
@@ -172,12 +161,11 @@ if ~isfield(STUDY, 'datasetinfo')
             STUDY.datasetinfo(realindex).filename  = [ tmpfile tmpext ];   
             STUDY.datasetinfo(realindex).subject   = ALLEEG(realindex).subject;
             STUDY.datasetinfo(realindex).session   = ALLEEG(realindex).session;
-            STUDY.datasetinfo(realindex).run       = ALLEEG(realindex).run;
             STUDY.datasetinfo(realindex).condition = ALLEEG(realindex).condition;
             STUDY.datasetinfo(realindex).group     = ALLEEG(realindex).group;                    
-        end
-    end
-end
+        end;
+    end;
+end;
 
 % execute commands
 % ----------------
@@ -198,8 +186,8 @@ for k = 1:2:length(g.commands)
             STUDY.datasetinfo(currentind).group   = g.commands{k+1};
         case 'session' 
             STUDY.datasetinfo(currentind).session = g.commands{k+1};
-        case 'run' 
-            STUDY.datasetinfo(currentind).run     = g.commands{k+1};
+        case 'session' 
+            STUDY.datasetinfo(currentind).session = g.commands{k+1};
         case 'remove'
             % create empty structure
             allfields = fieldnames(ALLEEG);
@@ -217,7 +205,7 @@ for k = 1:2:length(g.commands)
             
             if isfield(STUDY.datasetinfo, 'index')
                 STUDY.datasetinfo = rmfield(STUDY.datasetinfo, 'index');
-            end
+            end;
             STUDY.datasetinfo(1).index = [];
             STUDY.changrp = [];
         case 'return', return;
@@ -234,8 +222,8 @@ for k = 1:2:length(g.commands)
                 for tmpi = 1:length(clusters{cc})
                     if isfield(ALLEEG(clusters{cc}(tmpi)).dipfit, 'model')
                         idat = clusters{cc}(tmpi);
-                    end
-                end
+                    end;
+                end;
                 
                 indleft = [];
                 if rv ~= 1
@@ -248,15 +236,15 @@ for k = 1:2:length(g.commands)
                            fprintf('Selecting dipoles with less than %%%2.1f residual variance in dataset ''%s''\n', ...
                                 100*rv, ALLEEG(idat).setname);
                             indleft = eeg_dipselect(ALLEEG(idat), rv*100,'rv'); 
-                        end
+                        end;
                     else
                         fprintf('No dipole information found in ''%s'' dataset, using all components\n', ALLEEG.setname)
                     end
-                end
+                end;
                 for tmpi = 1:length(clusters{cc})                
                     STUDY.datasetinfo(clusters{cc}(tmpi)).comps = indleft;
-                end
-            end
+                end;
+            end;
             STUDY.cluster = [];
             STUDY = std_checkset(STUDY, ALLEEG); % recreate parent dataset           
            
@@ -273,13 +261,10 @@ for k = 1:2:length(g.commands)
             STUDY.datasetinfo(currentind).filename  = [ tmpfile tmpext ];   
             STUDY.datasetinfo(currentind).subject   = ALLEEG(currentind).subject;
             STUDY.datasetinfo(currentind).session   = ALLEEG(currentind).session;
-            STUDY.datasetinfo(currentind).run       = ALLEEG(currentind).run;
             STUDY.datasetinfo(currentind).condition = ALLEEG(currentind).condition;
             STUDY.datasetinfo(currentind).group     = ALLEEG(currentind).group;                    
             STUDY.datasetinfo(currentind).index     = currentind;    
-        otherwise
-            % running custom command
-            STUDY.datasetinfo(currentind).(g.commands{k}) = g.commands{k+1};
+        otherwise, error(sprintf('Unknown command %s', g.commands{k}));
     end
 end
 
@@ -290,11 +275,11 @@ if strcmpi(g.addchannellabels, 'on')
     for currentind = 1:length(ALLEEG)
         for ind = 1:ALLEEG(currentind).nbchan
             ALLEEG(currentind).chanlocs(ind).labels = int2str(ind);
-        end
-    end
+        end;
+    end;
     ALLEEG(currentind).saved = 'no';
     g.savedat = 'on';
-end
+end;
     
 % update ALLEEG structure?
 % ------------------------
@@ -303,25 +288,21 @@ if strcmpi(g.updatedat, 'on')
         if ~strcmpi(ALLEEG(currentind).subject,   STUDY.datasetinfo(currentind).subject)
             ALLEEG(currentind).subject          = STUDY.datasetinfo(currentind).subject;
             ALLEEG(currentind).saved            = 'no';
-        end
+        end;
         if ~strcmpi(ALLEEG(currentind).condition, STUDY.datasetinfo(currentind).condition)
             ALLEEG(currentind).condition        = STUDY.datasetinfo(currentind).condition;
             ALLEEG(currentind).saved            = 'no';
-        end
+        end;
         if ~isequal(ALLEEG(currentind).session, STUDY.datasetinfo(currentind).session)
             ALLEEG(currentind).session          = STUDY.datasetinfo(currentind).session;
             ALLEEG(currentind).saved            = 'no';
-        end
-        if ~isequal(ALLEEG(currentind).run, STUDY.datasetinfo(currentind).run)
-            ALLEEG(currentind).run              = STUDY.datasetinfo(currentind).run;
-            ALLEEG(currentind).saved            = 'no';
-        end
+        end;
         if ~strcmpi(char(ALLEEG(currentind).group), char(STUDY.datasetinfo(currentind).group))
             ALLEEG(currentind).group            = STUDY.datasetinfo(currentind).group;
             ALLEEG(currentind).saved            = 'no';
-        end
-    end
-end
+        end;
+    end;
+end;
 
 % remove empty datasets (cannot be done above because some empty datasets
 % might not have been removed)
@@ -330,19 +311,19 @@ rmindex = [];
 for index = 1:length(STUDY.datasetinfo)
     if isempty(STUDY.datasetinfo(index).subject) && isempty(ALLEEG(index).nbchan)
         rmindex = [ rmindex index ];
-    end
-end
+    end;
+end;
 STUDY.datasetinfo(rmindex) = [];
 ALLEEG(rmindex)            = [];
 for index = 1:length(STUDY.datasetinfo)
     STUDY.datasetinfo(index).index = index;
-end
+end;
 
 % remove empty ALLEEG structures
 % ------------------------------
 while length(ALLEEG) > length(STUDY.datasetinfo)
    ALLEEG(end) = [];
-end
+end;
 %[ ALLEEG STUDY.datasetinfo ] = remove_empty(ALLEEG, STUDY.datasetinfo);
 
 % save datasets if necessary
@@ -355,31 +336,34 @@ if strcmpi(g.savedat, 'on')
             TMP = pop_saveset(ALLEEG(index), 'savemode', 'resave');
             ALLEEG = eeg_store(ALLEEG, TMP, index);
             ALLEEG(index).saved = 'yes';
-        end
-    end
-end
+        end;
+    end;
+end;
 
 % remove cluster information if necessary
 % ---------------------------------------
 if strcmpi(g.rmclust, 'on')
     STUDY.cluster = [];
-end
+end;
 
 % save study if necessary
 % -----------------------
 if ~isempty(g.commands)
     STUDY.changrp = [];
     STUDY.cluster = [];
-end
-[STUDY, ALLEEG] = std_checkset(STUDY, ALLEEG);
-if ~isempty(g.filename)
-    [STUDY.filepath, STUDY.filename, ext] = fileparts(fullfile( g.filepath, g.filename ));
+%    if ~isempty(STUDY.design)
+%        [STUDY] = std_createclust(STUDY, ALLEEG, 'parentcluster', 'on');
+%    end;
+end;
+[STUDY ALLEEG] = std_checkset(STUDY, ALLEEG);
+if ~isempty(g.filename),
+    [STUDY.filepath STUDY.filename ext] = fileparts(fullfile( g.filepath, g.filename ));
     STUDY.filename = [ STUDY.filename ext ];
     g.resave = 'on';
 end
 if strcmpi(g.resave, 'on')
     STUDY = pop_savestudy(STUDY, ALLEEG, 'savemode', 'resave');
-end
+end;    
 
 % ---------------------
 % remove empty elements
@@ -390,19 +374,19 @@ function [ALLEEG, datasetinfo] = remove_empty(ALLEEG, datasetinfo);
     for index = 1:length(datasetinfo)
         if isempty(datasetinfo(index).subject) && isempty(ALLEEG(index).nbchan)
             rmindex = [ rmindex index ];
-        end
-    end
+        end;
+    end;
     datasetinfo(rmindex) = [];
     ALLEEG(rmindex)      = [];
     for index = 1:length(datasetinfo)
         datasetinfo(index).index = index;
-    end
+    end;
     
     % remove empty ALLEEG structures
     % ------------------------------
     while length(ALLEEG) > length(datasetinfo)
        ALLEEG(end) = [];
-    end
+    end;
         
     
     

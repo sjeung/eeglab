@@ -13,37 +13,26 @@
 
 % Copyright (C) Arnaud Delorme, CERCO
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [boolval npersubj] = std_checkfiles(STUDY, ALLEEG);
 
 if nargin < 2
     help std_checkfiles;
     return;
-end
+end;
 return;
 
 filetypes = { 'daterp' 'datspec' 'datersp' 'datitc' 'dattimef' ...
@@ -63,7 +52,7 @@ for index = 1:length(filetypes)
     [ tmpstruct compinds filepresent ] = std_fileinfo(ALLEEG, filetypes{index});
     if ~isempty(tmpstruct)
         fprintf('Files of type "%s" detected, checking...',  filetypes{index});
-    end
+    end;
     
     % check if the structures are equal
     % ---------------------------------
@@ -88,33 +77,33 @@ for index = 1:length(filetypes)
                             for cind = 1:length(firstval)
                                 if isreal(firstval{cind}) && ~isempty(firstval{cind}) && isnan(firstval{cind}(1))
                                     firstval{cind} = 'NaN';
-                                end
-                            end
+                                end;
+                            end;
                             for cind = 1:length(tmpval)
                                 if isreal(tmpval{cind}) && ~isempty(tmpval{cind}) && isnan(tmpval{cind}(1))
                                     tmpval{cind} = 'NaN';
-                                end
-                            end
-                        end
+                                end;
+                            end;
+                        end;
                         
                         if ~isequal(firstval, tmpval)
                             if ~strcmpi(fields{f_ind}, 'labels') || strcmpi(uniformchannels, 'on')
-                                if firstpass == 1, fprintf('\n'); firstpass = 0; end
+                                if firstpass == 1, fprintf('\n'); firstpass = 0; end;
                                 fprintf('  Error, difference accross data files for field "%s"\n', fields{f_ind});
                                 notequal = 1;
                                 passall = 0;
                                 break;
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
+                            end;
+                        end;
+                    end;
+                end;
+            end;
+        end;
+    end;
     
     % check the consistency of changrp and cluster with saved information
     % -------------------------------------------------------------------
-    if isempty(tmpstruct), notequal = 1; end
+    if isempty(tmpstruct), notequal = 1; end;
     if filetypes{index}(1) == 'd' && notequal == 0        
         % scan all channel labels
         % -----------------------
@@ -133,25 +122,25 @@ for index = 1:length(filetypes)
                                     fprintf('\nError: channel index in STUDY.changrp(%d) for dataset %d is "%d" but "%d" in data files\n', cind, inddat, tmpchan, tmpchan2);
                                     notequal = 1;
                                     break;
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
+                                end;
+                            end;
+                        end;
+                    end;
+                end;
+            end;
+        end;
     elseif notequal == 0 && ~isempty(STUDY.cluster) % components
         % check that the cell structures are present
         % ------------------------------------------
         if ~isfield(STUDY.cluster, 'setinds')
             STUDY.cluster(1).setinds = [];
             STUDY.cluster(1).allinds = [];
-        end
+        end;
         for cind = 1:length(STUDY.cluster)
             if isempty(STUDY.cluster(cind).setinds)
                 STUDY.cluster(cind) = std_setcomps2cell(STUDY, cind);
-            end
-        end
+            end;
+        end;
         for cind = 1:length(STUDY.cluster)
             if notequal == 0
                 for inddat = 1:length(ALLEEG)
@@ -160,7 +149,7 @@ for index = 1:length(filetypes)
                     tmpcomp = [];
                     for jind = 1:length(indnonempty)
                         tmpcomp = [ tmpcomp STUDY.cluster(cind).allinds{indnonempty(jind)}(tmpind{indnonempty(jind)}) ];
-                    end
+                    end;
                     
                     if ~isempty(setdiff(tmpcomp, compinds{inddat}))
                         if ~(isempty(compinds{inddat}) && strcmpi(filetypes{index}, 'icatopo'))
@@ -168,18 +157,18 @@ for index = 1:length(filetypes)
                             notequal = 1;
                             passall  = 0;
                             break;
-                        end
-                    end
-                end
-            end
-        end
-    end
-    if notequal == 0, fprintf(' Pass\n'); end
-end
+                        end;
+                    end;
+                end;
+            end;
+        end;
+    end;
+    if notequal == 0, fprintf(' Pass\n'); end;
+end;
 
 if ~passall
     disp('**** Recompute any measure above not receiving a "Pass" by')
     disp('**** calling menu items "STUDY > Precompute Channel/Component measures" ');
     disp('**** and by selecting the "Recompute even if present on disk" checkbox');
-end
+end;
 disp('Checking completed.');

@@ -143,30 +143,19 @@
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, October 11, 2004, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 % Coding notes: Useful information on functions and global variables used.
 
@@ -178,7 +167,7 @@ if nargin < 2
     return;
 end
 
-if ~ischar(varargin{1})
+if ~isstr(varargin{1})
     STUDY  = varargin{1};
     STUDY.etc.erpparams.topotime    = NaN; % [] for channels and NaN for components
     STUDY.etc.specparams.topofreq   = NaN; % NaN -> GUI disabled
@@ -200,7 +189,7 @@ if ~ischar(varargin{1})
         sameparent = 1;
         for k = 1: N
             % Assess the number of clustered components
-            if (~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8))  && (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13))
+            if (~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8))  & (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13))
                 clus_comps = clus_comps + length(STUDY.cluster(cls(k)).comps);
             end
             if k == 1
@@ -211,7 +200,7 @@ if ~ischar(varargin{1})
                 end
                 % For any other case verify that all clusters have the same parents
                 if ~(sum(strcmp(STUDY.cluster(cls(k)).parent, parent)) == length(parent)) % different parent
-                    if ~strcmp(STUDY.cluster(cls(k)).parent,'manual') && ~strcmp(parent, 'manual') 
+                    if ~strcmp(STUDY.cluster(cls(k)).parent,'manual') & ~strcmp(parent, 'manual') 
                         % if nither is an empty cluster (which was created manually)
                         sameparent = 0; % then the clusters have different parents
                     end
@@ -235,7 +224,7 @@ if ~ischar(varargin{1})
         num_cls = 0;
         for k = 1:N
             show_options{k+1} = [STUDY.cluster(cls(k)).name ' (' num2str(length(STUDY.cluster(cls(k)).comps))  ' ICs)'];
-            if (~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8)) && (~strncmpi('Outliers',STUDY.cluster(cls(k)).name,8))  && ...
+            if (~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8)) & (~strncmpi('Outliers',STUDY.cluster(cls(k)).name,8))  & ...
                     (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13))
                 num_cls = num_cls + 1;
             end
@@ -250,10 +239,10 @@ if ~ischar(varargin{1})
             if isempty(STUDY.cluster(k).child) 
                 if isempty(cls)
                     parent = STUDY.cluster(k).parent;
-                elseif ~isempty(STUDY.cluster(k).parent)  || ~isempty(parent) % if not both empty                          
+                elseif ~isempty(STUDY.cluster(k).parent)  | ~isempty(parent) % if not both empty                          
                     % Check if all parents are the same
                     if ~(sum(strcmp(STUDY.cluster(k).parent, parent)) == length(parent)) % different parent
-                        if ~strcmp(STUDY.cluster(k).parent,'manual') && ~strcmp(parent, 'manual') 
+                        if ~strcmp(STUDY.cluster(k).parent,'manual') & ~strcmp(parent, 'manual') 
                             sameparent = 0;
                         end
                     end
@@ -293,9 +282,9 @@ if ~ischar(varargin{1})
                     show_options{count} = ['         ' STUDY.cluster(indclust3).name ' (' num2str(length(STUDY.cluster(indclust3).comps))  ' ICs)'];
                     cls(count) = indclust3;
                     count = count+1;
-                end
-            end
-        end
+                end;
+            end;
+        end;
         show_options = { ['All cluster centroids'] show_options{:} }; 
     end
     all_comps = length(STUDY.cluster(1).comps);
@@ -342,15 +331,15 @@ if ~ischar(varargin{1})
 
     % enable buttons
     % --------------
-    filename = fullfile(STUDY.datasetinfo(1).filepath, STUDY.datasetinfo(1).subject);
-    if ~isempty(dir([filename '*.icaspec'])),   spec_enable = 'on'; else spec_enable  = 'off'; end
-    if ~isempty(dir([filename '*.icaerp'] )) ,   erp_enable = 'on'; else erp_enable   = 'off'; end
-    if ~isempty(dir([filename '*.icaerpim'] )), erpim_enable = 'on'; else erpim_enable = 'off'; end
-    if ~isempty(dir([filename '*.icatimef'])) ,   ersp_enable = 'on'; else ersp_enable  = 'off'; end
+    filename = STUDY.design(STUDY.currentdesign).cell(1).filebase;
+    if exist([filename '.icaspec']) ,   spec_enable = 'on'; else spec_enable  = 'off'; end;
+    if exist([filename '.icaerp'] )  ,   erp_enable = 'on'; else erp_enable   = 'off'; end;
+    if exist([filename '.icaerpim'] ), erpim_enable = 'on'; else erpim_enable = 'off'; end;
+    if exist([filename '.icaersp']) ,   ersp_enable = 'on'; else ersp_enable  = 'off'; end;
     filename = fullfile( ALLEEG(1).filepath, ALLEEG(1).filename(1:end-4));
-    if ~isempty(dir([filename '*.icatopo'])), scalp_enable = 'on'; else scalp_enable = 'off'; end
+    if exist([filename '.icatopo']), scalp_enable = 'on'; else scalp_enable = 'off'; end;
     
-    if isfield(ALLEEG(1).dipfit, 'model'), dip_enable   = 'on'; else dip_enable   = 'off'; end
+    if isfield(ALLEEG(1).dipfit, 'model'), dip_enable   = 'on'; else dip_enable   = 'off'; end;
     
     % userdata below
     % --------------
@@ -360,16 +349,15 @@ if ~ischar(varargin{1})
     fig_arg{2}    = N;
         
     str_name       = sprintf('STUDY ''%s'' - ''%s'' component clusters', STUDY.name, STUDY.design(STUDY.currentdesign).name);
-    if length(str_name) > 80, str_name = [ str_name(1:80) '...''' ]; end
-    if length(cls) > 1, vallist = 1; else vallist = 2; end
+    if length(str_name) > 80, str_name = [ str_name(1:80) '...''' ]; end;
+    if length(cls) > 1, vallist = 1; else vallist = 2; end;
     geomline = [1 0.35 1];
-    geometry = { [0.8 3] [1] geomline geomline geomline geomline geomline geomline geomline geomline ...
+    geometry = { [4 .1 .1 .1 .1] [1] geomline geomline geomline geomline geomline geomline geomline geomline ...
                  geomline geomline [1] geomline geomline geomline };
     geomvert = [ 1 .5 1 3 1 1 1 1 1 1 1 1 1 1 1 1];
     uilist   = { ...
-        {'style' 'text'       'string' 'Select design:' 'FontWeight' 'Bold' 'HorizontalAlignment' 'center'} ...
-        {'style' 'popupmenu'  'string' { STUDY.design.name } 'FontWeight' 'Bold' 'tag' 'design' 'value' STUDY.currentdesign  } ...
-        { } ...
+        {'style' 'text' 'string' str_name ...
+            'FontWeight' 'Bold' 'HorizontalAlignment' 'center'} {} {} {} {} {} ...
         {'style' 'text'       'string' 'Select cluster to plot' 'FontWeight' 'Bold' } {} ...
         {'style' 'text'       'string' 'Select component to plot        ' 'FontWeight' 'Bold'} ...
         {'style' 'listbox'    'string' show_options 'value' vallist 'tag' 'clus_list' 'Callback' show_clust } ...
@@ -378,7 +366,7 @@ if ~ischar(varargin{1})
         {'style' 'pushbutton' 'enable' scalp_enable 'string' 'Plot scalp maps' 'Callback' plot_clus_maps} {} ...
         {'style' 'pushbutton' 'enable' scalp_enable 'string' 'Plot scalp map(s)' 'Callback' plot_comp_maps}...
         {'style' 'pushbutton' 'enable'   dip_enable 'string' 'Plot dipoles' 'Callback' plot_clus_dip}  ...
-        {'style' 'pushbutton' 'enable'   dip_enable 'string' 'Params' 'Callback' dip_opt }  ...
+        {'style' 'pushbutton' 'enable'   erp_enable 'string' 'Params' 'Callback' dip_opt }  ...
         {'style' 'pushbutton' 'enable'   dip_enable 'string' 'Plot dipole(s)' 'Callback' plot_comp_dip}...
         {'style' 'pushbutton' 'enable'   erp_enable 'string' 'Plot ERPs' 'Callback' plot_clus_erp} ...
         {'style' 'pushbutton' 'enable'   erp_enable 'string' 'Params' 'Callback' erp_opt }  ...
@@ -410,14 +398,14 @@ if ~ischar(varargin{1})
        addui = varargin{4};
        if ~isfield(addui, 'uilist')
            error('Additional GUI definition (argument 4) requires the field "uilist"');
-       end
+       end;
        if ~isfield(addui, 'geometry')
            addui.geometry = mat2cell(ones(1,length(addui.uilist)));
-       end
+       end;
        uilist = { uilist{:}, addui.uilist{:} };
        geometry = { geometry{:} addui.geometry{:} };
        geomvert = [ geomvert ones(1,length(addui.geometry)) ];
-   end
+   end;
    
    [out_param userdat] = inputgui( 'geometry' , geometry, 'uilist', uilist, ...
                                    'helpcom', 'pophelp(''pop_clustoutput'')', ...
@@ -437,20 +425,16 @@ if ~ischar(varargin{1})
 else
     hdl = varargin{2};  %figure handle
     userdat = get(varargin{2}, 'userdat');    
-    ALLEEG  = userdat{1}{1};
-    STUDY   = userdat{1}{2};
-    cls     = userdat{1}{3};
-    design  = get(findobj('parent', hdl, 'tag', 'design')      , 'value');
-	if ~std_checkdesign(STUDY, design)
-        return;
-    end
+    ALLEEG = userdat{1}{1};
+    STUDY = userdat{1}{2};
+    cls = userdat{1}{3};
     
     clus     = get(findobj('parent', hdl, 'tag', 'clus_list'), 'value');
     comp_ind = get(findobj('parent', hdl, 'tag', 'clust_comp'), 'Value'); 
-    if clus == 1 && length(cls) == 1
+    if clus == 1 & length(cls) == 1
         warndlg2('No cluster', 'No cluster');
         return;
-    end
+    end;
     
     try
         switch  varargin{1}
@@ -461,10 +445,10 @@ else
                 if (clus ~= 1 ) %specific cluster
                     if comp_ind(1) ~= 1  % check that not all comps in cluster are requested
                         subject = STUDY.datasetinfo( STUDY.cluster(cls(clus-1)).sets(1,comp_ind-1)).subject;
-                        a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'','  num2str(cls(clus-1)) ', ''comps'', ' num2str(comp_ind-1) ', ''design'', ' int2str(design) ' );' ];
+                        a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'','  num2str(cls(clus-1)) ', ''comps'', ' num2str(comp_ind-1) ' );' ];
                         eval(a); STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, a);  
                      else
-                        a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'','  num2str(cls(clus-1)) ', ''design'', ' int2str(design) ', ''plotsubjects'', ''on'' );' ];
+                        a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'','  num2str(cls(clus-1)) ', ''plotsubjects'', ''on'' );' ];
                         eval(a); STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, a);  
                     end
                 else
@@ -475,12 +459,12 @@ else
                        tmp = strfind(comp_name{ci},'''');
                        clust_name = comp_name{ci}(tmp(1)+1:tmp(end)-1);
                        for k = 1:length(cls)
-                           if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) && ~strncmpi('Outliers',STUDY.cluster(cls(k)).name,8) && ...
+                           if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) & ~strncmpi('Outliers',STUDY.cluster(cls(k)).name,8) & ...
                                 (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)) 
                                if strcmpi(STUDY.cluster(cls(k)).name, clust_name)
                                    cind = comp_ind(ci) - num_comps; % component index in the cluster
                                    subject = STUDY.datasetinfo( STUDY.cluster(cls(k)).sets(1,cind)).subject;
-                                   a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'','  num2str(cls(k)) ', ''design'', ' int2str(design) ', ''comps'',' num2str(cind) ' );' ];
+                                   a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'','  num2str(cls(k)) ', ''comps'',' num2str(cind) ' );' ];
                                    eval(a); STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, a);  
                                    break;
                                else
@@ -498,20 +482,20 @@ else
                 plotting_option = [ plotting_option(1:end-4) 'plot' ];
                 if (clus ~= 1 ) % specific cluster option
                     if ~isempty(STUDY.cluster(cls(clus-1)).comps)
-                        a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'','  num2str(cls(clus-1)) ', ''design'', ' int2str(design) ');' ];
+                        a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'','  num2str(cls(clus-1)) ');' ];
                         eval(a); STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, a);  
                     end
                 else % all clusters
                     % All clusters does not include 'Notclust' 'ParentCluster' and 'Outliers' clusters. 
                     tmpcls = [];
                     for k = 1:length(cls) 
-                        if ~strncmpi(STUDY.cluster(cls(k)).name,'Notclust',8) && ~strncmpi(STUDY.cluster(cls(k)).name,'Outliers',8) && ...
-                                (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)) && ~isempty(STUDY.cluster(cls(k)).comps)
+                        if ~strncmpi(STUDY.cluster(cls(k)).name,'Notclust',8) & ~strncmpi(STUDY.cluster(cls(k)).name,'Outliers',8) & ...
+                                (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)) & ~isempty(STUDY.cluster(cls(k)).comps)
                             tmpcls = [ tmpcls cls(k)];
                         end
                     end
-                    a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'',['  num2str(tmpcls) '], ''design'', ' int2str(design) ');' ];
-                    %if strcmpi(plotting_option, 'dipplot'), a = [a(1:end-2) ',''mode'', ''together'');' ]; end
+                    a = ['STUDY = std_' plotting_option '(STUDY,ALLEEG,''clusters'',['  num2str(tmpcls) ']);' ];
+                    %if strcmpi(plotting_option, 'dipplot'), a = [a(1:end-2) ',''mode'', ''together'');' ]; end;
                     eval(a); STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, a);  
                 end
                 userdat{1}{2} = STUDY;
@@ -521,7 +505,7 @@ else
                 [STUDY com] = pop_dipparams(STUDY);
                 if ~isempty(com)
                     STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, com);
-                end
+                end;
                 userdat{1}{2} = STUDY;
                 set(hdl, 'userdat',userdat); %update information (STUDY)     
 
@@ -529,7 +513,7 @@ else
                 [STUDY com] = pop_erpparams(STUDY);
                 if ~isempty(com)
                     STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, com);
-                end
+                end;
                 userdat{1}{2} = STUDY;
                 set(hdl, 'userdat',userdat); %update information (STUDY)     
 
@@ -537,7 +521,7 @@ else
                 [STUDY com] = pop_statparams(STUDY);
                 if ~isempty(com)
                     STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, com);
-                end
+                end;
                 userdat{1}{2} = STUDY;
                 set(hdl, 'userdat',userdat); %update information (STUDY)     
 
@@ -545,7 +529,7 @@ else
                 [STUDY com] = pop_specparams(STUDY);
                 if ~isempty(com)
                     STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, com);
-                end
+                end;
                 userdat{1}{2} = STUDY;
                 set(hdl, 'userdat',userdat); %update information (STUDY)     
 
@@ -553,7 +537,7 @@ else
                 [STUDY com] = pop_erpimparams(STUDY);
                 if ~isempty(com)
                     STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, com);
-                end
+                end;
                 userdat{1}{2} = STUDY;
                 set(hdl, 'userdat',userdat); %update information (STUDY)     
 
@@ -561,7 +545,7 @@ else
                 [STUDY com] = pop_erspparams(STUDY);
                 if ~isempty(com)
                     STUDY.tmphist =  sprintf('%s\n%s',  STUDY.tmphist, com);
-                end
+                end;
                 userdat{1}{2} = STUDY;
                 set(hdl, 'userdat',userdat); %update information (STUDY)     
 
@@ -572,7 +556,7 @@ else
                 count = 1;
                 if clust ~= 1 %specific cluster
                     STUDY.cluster(cls(clust-1)).selected = comp;
-                end
+                end;
                 userdat{1}{2} = STUDY;
                 set(hdl, 'userdat',userdat); %update information (STUDY)     
 
@@ -596,13 +580,13 @@ else
                         if ~isempty(STUDY.cluster(cls(cind-1)).selected)
                             selected = min(STUDY.cluster(cls(cind-1)).selected, 1+length(STUDY.cluster(cls(cind-1)).comps(1,:)));
                             STUDY.cluster(cls(cind-1)).selected = selected;
-                        end
-                    end
+                        end;
+                    end;
 
                 else % All clusters accept 'Notclust' and 'Outliers'
                     count = 1;
                     for k = 1: length(cls)
-                        if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) && ~strncmpi('Outliers',STUDY.cluster(cls(k)).name,8) && ...
+                        if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) & ~strncmpi('Outliers',STUDY.cluster(cls(k)).name,8) & ...
                                 (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)) 
                             for l = 1: length(STUDY.cluster(cls(k)).comps)
                                 if ~isnan(STUDY.cluster(cls(k)).sets(1,l))
@@ -615,7 +599,7 @@ else
                         end
                     end
                 end
-                if selected > length(compid), selected = 1; end
+                if selected > length(compid), selected = 1; end;
                 set(findobj('parent', hdl, 'tag', 'clust_comp'), 'value', selected, 'String', compid);
 
             case 'plotsum'
@@ -628,7 +612,7 @@ else
                     % All clusters does not include 'Notclust' and 'Outliers' clusters. 
                     tmpcls = [];
                     for k = 1:length(cls) 
-                        if ~strncmpi(STUDY.cluster(cls(k)).name,'Notclust',8) && ~strncmpi(STUDY.cluster(cls(k)).name,'Outliers',8) && ...
+                        if ~strncmpi(STUDY.cluster(cls(k)).name,'Notclust',8) & ~strncmpi(STUDY.cluster(cls(k)).name,'Outliers',8) & ...
                                 (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)) 
                             tmpcls = [tmpcls cls(k)];
                         end
@@ -654,7 +638,7 @@ else
                     return;
                 end
                 % Don't rename 'Notclust' and 'Outliers'  clusters.
-                if strncmpi('Notclust',STUDY.cluster(cls(clus_num)).name,8) || strncmpi('Outliers',STUDY.cluster(cls(clus_num)).name,8) || ...
+                if strncmpi('Notclust',STUDY.cluster(cls(clus_num)).name,8) | strncmpi('Outliers',STUDY.cluster(cls(clus_num)).name,8) | ...
                         strncmpi('ParentCluster',STUDY.cluster(cls(clus_num)).name,13)
                     warndlg2('The ParentCluster, Outliers, and Notclust clusters cannot be renamed');
                     return;
@@ -700,7 +684,7 @@ else
                 ncomp = length(comp_ind); % number of selected components
                 optionalcls =[];
                 for k = 1:length(cls)
-                    if (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13))  && (k~= old_clus)
+                    if (~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13))  & (k~= old_clus)
                         optionalcls = [optionalcls cls(k)];
                     end
                 end                    
@@ -747,7 +731,7 @@ else
                 if old_clus == 0 % 'all clusters' option 
                     return;
                 end
-                if strncmpi('Notclust',STUDY.cluster(cls(old_clus)).name,8) || strncmpi('ParentCluster',STUDY.cluster(cls(old_clus)).name,13)    % There are no outliers to 'Notclust'
+                if strncmpi('Notclust',STUDY.cluster(cls(old_clus)).name,8) | strncmpi('ParentCluster',STUDY.cluster(cls(old_clus)).name,13)    % There are no outliers to 'Notclust'
                     warndlg2('Cannot reassign components of ''Notclust'' or ''ParentCluster''.');
                     return;
                 end
@@ -794,7 +778,7 @@ else
                 if clus
                     std_name = STUDY.cluster(cls(clus)).name;
                     % Cannot reject outliers from 'Notclust', 'ParentCluster' and 'Outlier' clusters
-                    if strncmpi('Notclust',std_name,8) || strncmpi('ParentCluster', std_name,13) || ...
+                    if strncmpi('Notclust',std_name,8) | strncmpi('ParentCluster', std_name,13) | ...
                             strncmpi('Outliers',std_name,8)
                         warndlg2('Cannot reject outliers of ''Notclust'' or ''Outliers'' or ''ParentCluster'' clusters.');
                         return;
@@ -804,7 +788,7 @@ else
                     std_name = 'All clusters';
                     clusters = [];
                     for k = 1:length(cls)
-                         if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) && ~strncmpi('Outliers',STUDY.cluster(cls(k)).name,8) && ...
+                         if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) & ~strncmpi('Outliers',STUDY.cluster(cls(k)).name,8) & ...
                                  ~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)  
                             clusters = [ clusters cls(k)];
                         end
@@ -883,7 +867,7 @@ else
                 clus_names = get(findobj('parent', hdl, 'tag', 'clus_list'), 'string') ;
                 optionalcls =[];
                 for k = 2:length(clus_names)
-                    if (~strncmpi('Notclust',clus_names{k},8)) && (~strncmpi('Outliers',clus_names{k},8)) && ...
+                    if (~strncmpi('Notclust',clus_names{k},8)) & (~strncmpi('Outliers',clus_names{k},8)) & ...
                             (~strncmpi('ParentCluster',clus_names{k},13))
                         optionalcls = [optionalcls k];
                     end
@@ -951,7 +935,7 @@ else
         end
     catch
         eeglab_error;
-    end       
+    end;        
 end
 
 function newname = renameclust(oldname, newname);

@@ -21,37 +21,26 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, June 07, 2007, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [STUDY, centroid] = std_readtopoclust(STUDY,ALLEEG, clsind);
 
 if nargin < 3
     help readtopoclust;
     return;
-end
+end;
     
 if isempty(clsind)
     for k = 2: length(STUDY.cluster) % don't include the ParentCluster
@@ -68,7 +57,7 @@ if Ncond == 0
 end 
 centroid = cell(length(clsind),1);
 fprintf('Computing the requested mean cluster scalp maps (only done once)\n');
-if ~isfield( STUDY.cluster, 'topo' ), STUDY.cluster(1).topo = []; end
+if ~isfield( STUDY.cluster, 'topo' ), STUDY.cluster(1).topo = []; end;
 cond = 1;
 
 for clust = 1:length(clsind) %go over all requested clusters
@@ -80,11 +69,11 @@ for clust = 1:length(clsind) %go over all requested clusters
         for k = 1:numitems % go through all components
             comp  = STUDY.cluster(clsind(clust)).comps(k);
             abset = STUDY.cluster(clsind(clust)).sets(cond,k);
-            if ~isnan(comp) && ~isnan(abset)
+            if ~isnan(comp) & ~isnan(abset)
                 [grid yi xi] = std_readtopo(ALLEEG, abset, comp);
                 if ~isfield(centroid{clust}, 'topotmp') || isempty(centroid{clust}.topotmp)
                     centroid{clust}.topotmp = zeros([ size(grid(1:4:end),2) numitems ]);
-                end
+                end;
                 centroid{clust}.topotmp(:,k) = grid(1:4:end); % for inversion
                 centroid{clust}.topo{k} = grid;
                 centroid{clust}.topox = xi;
@@ -100,7 +89,7 @@ for clust = 1:length(clsind) %go over all requested clusters
             for cond  = 1
                 if clsind(1) > 0
                     ncomp = length(STUDY.cluster(clsind(clust)).comps);
-                end
+                end;
                 [ tmp pol ] = std_comppol(centroid{clust}.topotmp);
                 fprintf('%d/%d polarities inverted while reading component scalp maps\n', ...
                         length(find(pol == -1)), length(pol));
@@ -109,8 +98,8 @@ for clust = 1:length(clsind) %go over all requested clusters
                     centroid{clust}.topo{k} = pol(k)*centroid{clust}.topo{k};
                     if k == 1, allscalp = centroid{clust}.topo{k}/nitems;
                     else       allscalp = centroid{clust}.topo{k}/nitems + allscalp;
-                    end
-                end
+                    end;
+                end;
                 STUDY.cluster(clsind(clust)).topox   = centroid{clust}.topox;
                 STUDY.cluster(clsind(clust)).topoy   = centroid{clust}.topoy;
                 STUDY.cluster(clsind(clust)).topoall = centroid{clust}.topo;
@@ -124,7 +113,7 @@ for clust = 1:length(clsind) %go over all requested clusters
         centroid{clust}.topoy = STUDY.cluster(clsind(clust)).topoy;
         centroid{clust}.topo  = STUDY.cluster(clsind(clust)).topoall;
         
-    end
+    end;
     
 end
 

@@ -19,12 +19,11 @@
 %   'comps'    - [numeric vector]  -> indices of the cluster components to plot.
 %                'all'  -> plot all the components in the cluster 
 %                {default: 'all'}.
-%   'mode'     - ['together'|'apart'|'multicolor'] Display all requested cluster on one 
+%   'mode'     - ['together'|'apart'] Display all requested cluster on one 
 %                figure ('together') or separate figures ('apart'). 
-%                'together'-> plot all 'clusters' individuall in one multi-pane figure (without the gui).
-%                'apart'   -> plot each cluster in a separate figure. 
-%                'multicolor' -> plot all clusters in one figure, 
-%                Note that this parameter has no effect if the 'comps' option (above) is used.
+%                'together'-> plot all 'clusters' in one figure (without the gui).
+%                'apart'   -> plot each cluster in a separate figure. Note that
+%                this parameter has no effect if the 'comps' option (above) is used.
 %                {default: 'together'}
 %   'figure'   - ['on'|'off'] plots on a new figure ('on')  or plots on current
 %                figure ('off'). If 'figure','off' does not display gui controls,
@@ -32,10 +31,6 @@
 %                {default: 'on'}. 
 %   'groups'   - ['on'|'off'] use different colors for different groups.
 %                {default: 'off'}.
-%   'dipcolor' - [cell vector] color for dipoles in each cluster. (multicolor mode)
-%   'dipsize'  - [numeric vector] size for each cluster. (multicolor mode)
-%                {default if unspecified: will automatically color/size each
-%                cluster}
 % Outputs:
 %   STUDY      - the input STUDY set structure modified with plotted cluster 
 %                mean dipole, to allow quick replotting (unless cluster means 
@@ -49,35 +44,22 @@
 %
 % Authors:  Hilit Serby, Arnaud Delorme, Scott Makeig, SCCN, INC, UCSD, June, 2005
 %          'groups' added by Makoto Miyakoshi on June 2012.
-%          'multicolor' mode added by John Iversen to draw all clusters on
-%           a single panel, with each cluster indicated by different color/size dipoles.
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, June 08, 2005, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function STUDY = std_dipplot(STUDY, ALLEEG, varargin)
 
@@ -87,11 +69,8 @@ figureon = 1; % plot on a new figure
 mode = 'apart';
 
 STUDY = pop_dipparams(STUDY, 'default');
+opt_dipplot = {'projlines',STUDY.etc.dipparams.projlines, 'axistight', STUDY.etc.dipparams.axistight, 'projimg', STUDY.etc.dipparams.projimg, 'normlen', 'on', 'pointout', 'on', 'verbose', 'off', 'dipolelength', 0,'spheres','on'};
 
-opt_dipplot = {'projlines',STUDY.etc.dipparams.projlines, 'axistight', STUDY.etc.dipparams.axistight, 'projimg', STUDY.etc.dipparams.projimg, 'spheres', 'on', 'dipolelength', 0, 'density', STUDY.etc.dipparams.density};
-
-dipcolor = [];
-dipsize = [];
 %, 'spheres', 'on'
 groupval = 'off';
 for k = 3:2:nargin
@@ -103,18 +82,14 @@ for k = 3:2:nargin
                     cls = 2:length(STUDY.cluster);
                 end
             else
-                if ischar(varargin{k-1}) && strcmpi(varargin{k-1}, 'all')
+                if isstr(varargin{k-1}) & strcmpi(varargin{k-1}, 'all')
                     cls = 2:length(STUDY.cluster);
                 else
                     error('std_dipplot: ''clusters'' input takes either specific clusters (numeric vector) or keyword ''all''.');
                 end
             end
-            if length(cls) == 1, mode = 'apart'; else mode = 'together'; end
+            if length(cls) == 1, mode = 'apart'; else mode = 'together'; end;
         case 'comps'
-            if strcmpi(STUDY.etc.dipparams.density, 'on')
-                disp('Single dipole should not be plotted using dipole density, reverting to dipole plotting');
-                opt_dipplot{end} = 'off';
-            end
             STUDY = std_plotcompdip(STUDY, ALLEEG,  cls, varargin{k-1}, opt_dipplot{:});
             return;
         case 'plotsubjects', % do nothing
@@ -122,28 +97,12 @@ for k = 3:2:nargin
         case 'groups', groupval = varargin{k-1};
         case 'figure'
             if strcmpi(varargin{k-1},'off') 
-                if strcmpi(STUDY.etc.dipparams.density, 'on')
-                    disp('Cannot plot dipole density within figure, reverting to dipole plotting');
-                    opt_dipplot{end} = 'off';
-                end
                 opt_dipplot{end + 1} = 'gui';
                 opt_dipplot{end + 1} = 'off';
                 figureon = 0;
             end
-      case 'dipcolor'
-        dipcolor = varargin{k-1};
-      case 'dipsize'
-        dipsize = varargin{k-1};
     end
 end
-
-if strcmpi(mode, 'together')
-    if strcmpi(STUDY.etc.dipparams.density, 'on')
-        disp('Cannot plot dipole density within figure, reverting to dipole plotting');
-        opt_dipplot{end} = 'off';
-    end
-end
-
 % select clusters to plot
 % -----------------------
 if isempty(cls)
@@ -151,12 +110,12 @@ if isempty(cls)
     cls = 2:length(STUDY.cluster); % plot all clusters in STUDY
     for k = 1: length(cls)
         % don't include 'Notclust' clusters
-        if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) && ~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)
+        if ~strncmpi('Notclust',STUDY.cluster(cls(k)).name,8) & ~strncmpi('ParentCluster',STUDY.cluster(cls(k)).name,13)
             tmp = [tmp cls(k)];
         end
     end
     cls = tmp;
-end
+end;
 
 if strcmpi(mode, 'apart')  % case each cluster on a separate figure
     for clus = 1: length(cls) % For each cluster requested
@@ -228,24 +187,9 @@ if strcmpi(mode, 'apart')  % case each cluster on a separate figure
                options{end+1} = 'meshdata';
                options{end+1} = ALLEEG(abset).dipfit.hdmfile;
            end
-           %enable both lines and images to be projected; increase #dipole limits
-           if ndip < 20 && strcmpi(options{1}, 'projlines') && length(cls) == 1
+           if ndip < 6 && strcmpi(options{1}, 'projlines') && length(cls) == 1 % less than 6 dipoles, project lines 
                options{2} = 'on';
            end
-           if ndip < 20 && strcmpi(options{5}, 'projimg') && length(cls) == 1
-             options{6} = 'on';
-           end
-           
-           % Dealing with projection lines
-           if strcmpi(options{2},'on')
-               projlinesvect = ones(1,length(cluster_dip_models));
-           elseif strcmpi(options{2},'off') && strcmp(STUDY.etc.dipparams.centrline,'on')
-               projlinesvect = zeros(1,length(cluster_dip_models));
-               projlinesvect(end) = 1;
-           elseif strcmpi(options{2},'off')
-               projlinesvect = zeros(1,length(cluster_dip_models));
-           end
-           options{2} = projlinesvect;
            
            if figureon
                dipplot(cluster_dip_models, options{:});
@@ -255,7 +199,7 @@ if strcmpi(mode, 'apart')  % case each cluster on a separate figure
            else
                dipplot(cluster_dip_models, options{:},'view', [0.5 -0.5 0.5]);
                for gind = 1:length(options) % remove the 'gui' 'off' option
-                   if ischar(options{gind}) 
+                   if isstr(options{gind}) 
                        if strfind(options{gind}, 'gui')
                            break;
                        end
@@ -334,32 +278,15 @@ if strcmpi(mode, 'together')  % case all clusters are plotted in the same figure
             options{end+1} = 'meshdata';
             options{end+1} = ALLEEG(abset).dipfit.hdmfile;
         end
-        
-        % Dealing with projection lines
-        if strcmpi(options{2},'on')
-            projlinesvect = ones(1,length(cluster_dip_models));
-        elseif strcmpi(options{2},'off') && strcmp(STUDY.etc.dipparams.centrline,'on')
-            projlinesvect = zeros(1,length(cluster_dip_models));
-            projlinesvect(end) = 1;
-        elseif strcmpi(options{2},'off')
-            projlinesvect = zeros(1,length(cluster_dip_models));
-        end
-           options{2} = projlinesvect;
-        
-        hsbplot = subplot(rowcols(1),rowcols(2),l);
-        % Creating new axis for title only
-        set(hsbplot,'visible','off');
-        htitle = title([ STUDY.cluster(cls(l)).name ' (' num2str(length(unique(STUDY.cluster(cls(l)).sets(1,:)))) ' Ss, ' num2str(length(STUDY.cluster(cls(l)).comps)),' ICs)'],'color','white','Visible', 'on');
-        if rowcols(1)> 1, set(htitle,'Position', get(htitle,'Position')+ [0 0.05 0].*get(htitle,'Position') ); end
-        axes('Position', get(hsbplot,'Position'),'Color', 'black');
+        subplot(rowcols(1),rowcols(2),l) , 
         dipplot(cluster_dip_models, options{:});
-
+        title([ STUDY.cluster(cls(l)).name ' (' num2str(length(unique(STUDY.cluster(cls(l)).sets(1,:)))) ' Ss, '  num2str(length(STUDY.cluster(cls(l)).comps)),' ICs)'],'color','white');
         %diptitle = [STUDY.cluster(cls(l)).name ', ' num2str(length(unique(STUDY.cluster(cls(l)).sets(1,:)))) 'Ss'];
         %title(diptitle, 'Color', 'white');
         % Complex axcopy
         %if l == 1
         %    for gind = 1:length(options) % remove the 'gui' 'off' option
-        %        if ischar(options{gind}) 
+        %        if isstr(options{gind}) 
         %            if strfind(options{gind}, 'gui')
         %                break;
         %            end
@@ -376,161 +303,6 @@ if strcmpi(mode, 'together')  % case all clusters are plotted in the same figure
    end %finished going over all clusters
    set(fig_h, 'resize','on');
 end % finished case of 'all' clusters
-
-% ========================================================================================
-% multicolor mode
-%   all clusters are plotted in the same axis, with each cluster indicated by color/size
-%   also enable 'data cursor' so that in data tip mode, clicking on a dipole
-%    will display its name
-if strcmpi(mode, 'multicolor')
-  N = length(cls);
-  %%%%%%%%%%%%%%%%%%%%% color list %%%%%%%%%%%%%%%%%%%%%
-  % This color list was developped for std_envtopo
-  % modified from dipgroups below
-  colors{1}  = [1 1 1];            % White
-  colors{2}  = [1 1 0];            % Yellow
-  colors{3}  = [1 0 1];            % Fuchsia
-  colors{4}  = [1 0 0];            % Red
-  colors{5}  = [0.875 0.875 0.875]; % Silver
-  colors{6}  = [0.5 0.5 0.5];      % Gray
-  colors{7}  = [0.5 0.5 0];        % Olive
-  colors{8}  = [0.5 0 0.5];        % Purple
-  colors{9}  = [0.5 0 0];          % Maroon
-  colors{10} = [0 1 1];            % Aqua
-  colors{11} = [0 1 0];            % Lime
-  colors{12} = [0 0.5 0.5];        % Teal
-  colors{13} = [0 0.5 0];          % Green
-  colors{14} = [0 0 1];            % Blue
-  colors{15} = [0 0 0.5];          % Navy
-  colors{16} = [0 0 0];            % Black
-  % Choosing and sorting 13 colors for clusters: Red, Green, Blue,
-  % Fuchsia, Lime, Aqua, Maroon, Olive, Purple, Teal, Navy, Gray, and White
-  colors = colors([4 13 14 3 11 10 9 7 8 12 15 6 1 ]);
-  fig_h = figure;
-  orient tall
-  set(fig_h,'Color', 'black');
-  set(fig_h,'Name', 'All clusters dipoles','NumberTitle','off');
-  set(fig_h, 'resize','off');
-  
-  idx = 0; %cumulative dipole index
-  centroidIdx = [];
-  clear cluster_dip_models;
-  for l = 1:N %loop over clusters
-    len = length(STUDY.cluster(cls(l)).comps);
-    max_r = 0;
-    
-    %color, size for every cluster can be passed as arguments, or
-    %automatically iterate through a set of colors/sizes
-    if ~isempty(dipcolor)
-      clusterColors{l} = dipcolor{idx};
-    else
-      colorIndex = mod(l-1, length(colors))+1;
-      clusterColors{l} = colors{colorIndex};
-    end
-    
-    if ~isempty(dipsize)
-      clusterSizes(l) = dipsize(idx);
-    else
-      %after rotating through color list once, change size of dipole
-      if l <= length(colors)
-        clusterSizes(l) = 30;
-      elseif l <= 2*length(colors)
-        clusterSizes(l) = 20;
-      else
-        clusterSizes(l) = 15;
-      end
-    end
-    
-    if ~isfield(STUDY.cluster(cls(l)),'dipole')
-      STUDY = std_centroid(STUDY,ALLEEG, cls(l), 'dipole');
-    elseif isempty(STUDY.cluster(cls(l)).dipole)
-      STUDY = std_centroid(STUDY,ALLEEG, cls(l), 'dipole');
-    end
-    clustStartIdx = idx + 1;
-    
-    for k = 1:len %loop over components within a cluster
-      idx = idx + 1;
-      abset = STUDY.datasetinfo(STUDY.cluster(cls(l)).sets(1,k)).index;
-      subjname = STUDY.datasetinfo(STUDY.cluster(cls(l)).sets(1,k)).subject;
-      if ~isfield(ALLEEG(abset), 'dipfit')
-        warndlg2(['No dipole information available in dataset ' num2str(abset) ' , abort plotting'], 'Aborting plot dipoles');
-        return;
-      end
-      comp = STUDY.cluster(cls(l)).comps(k);
-      cluster_dip_models(idx).posxyz = ALLEEG(abset).dipfit.model(comp).posxyz;
-      cluster_dip_models(idx).momxyz = ALLEEG(abset).dipfit.model(comp).momxyz;
-      cluster_dip_models(idx).rv = ALLEEG(abset).dipfit.model(comp).rv;
-      if strcmpi(ALLEEG(abset).dipfit.coordformat, 'spherical')
-        if isfield(ALLEEG(abset).dipfit, 'hdmfile') %dipfit 2 spherical model
-          load('-mat', ALLEEG(abset).dipfit.hdmfile);
-          max_r = max(max_r, max(vol.r));
-        else % old version of dipfit
-          max_r = max(max_r,max(ALLEEG(abset).dipfit.vol.r));
-        end
-      end
-      
-      dip_color{idx} = clusterColors{l};
-      dip_size(idx) = clusterSizes(l);
-      dip_label{idx} = sprintf('Cls %d (%s IC%d)',cls(l), subjname, comp);
-    end % finished going over cluster comps
-    
-    %add the cluster centroid
-    clustEndIdx = idx;
-    STUDY.cluster(cls(l)).dipole = computecentroid(cluster_dip_models(clustStartIdx:clustEndIdx));
-    idx = idx + 1;
-    centroidIdx(end+1) = idx;
-    cluster_dip_models(idx) = STUDY.cluster(cls(l)).dipole;
-    dip_color(idx) = {'k'};
-    dip_size(idx) = 10;
-    dip_label{idx} = sprintf('Cls %d centroid',cls(l));
-    clusterLabels{l} = sprintf('Cls %d',cls(l));
-    
-  end %loop over clusters
-  
-  options = opt_dipplot;
-  options{end + 1} =  'gui';
-  options{end + 1} =  'off';
-  options{end+1} =  'mri';
-  options{end+1} =  ALLEEG(abset).dipfit.mrifile;
-  options{end+1} =  'coordformat';
-  options{end+1} =  ALLEEG(abset).dipfit.coordformat;
-  options{end+1} = 'color';
-  options{end+1} = dip_color;
-  options{end+1} = 'dipolesize';
-  options{end+1} = dip_size;
-  options{end+1} = 'dipnames';
-  options{end+1} = dip_label;
-  if strcmpi(ALLEEG(abset).dipfit.coordformat, 'spherical')
-    options{end+1} = 'sphere';
-    options{end+1} = max_r;
-  else
-    options{end+1} = 'meshdata';
-    options{end+1} = ALLEEG(abset).dipfit.hdmfile;
-  end
-  
-  % Dealing with projection lines
-  if strcmpi(options{2},'on')
-      projlinesvect = ones(1,length(cluster_dip_models));
-  elseif strcmpi(options{2},'off') && strcmp(STUDY.etc.dipparams.centrline,'on')
-      projlinesvect = zeros(1,length(cluster_dip_models));
-      projlinesvect(centroidIdx) = 1;
-  elseif strcmpi(options{2},'off')
-      projlinesvect = zeros(1,length(cluster_dip_models));
-  end
-  options{2} = projlinesvect;
-  
-  dipplot(cluster_dip_models, options{:});
-  set(fig_h, 'resize','on');
-  
-  %data cursor will show component label
-  datacursormode on
-  dcm = datacursormode(gcf);
-  set(dcm,'Enable','on', 'UpdateFcn', @componentText)
-  
-end % multicolor. Supporting functions at end of file
-
-% ========================================================================================
-
 % std_plotcompdip() - Commandline function, to visualizing cluster components dipoles. 
 %                   Displays the dipoles of specified cluster components with the cluster mean 
 %                   dipole on separate figures. 
@@ -565,30 +337,19 @@ end % multicolor. Supporting functions at end of file
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, June 08, 2005, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function STUDY = std_plotcompdip(STUDY, ALLEEG, cls, comp_ind, varargin)
 if ~exist('cls')
@@ -611,11 +372,11 @@ for ci = 1:length(comp_ind)
         warndlg2(['No dipole information available in dataset ' num2str(abset) ' , abort plotting'], 'Aborting plot dipoles');
         return;
     end
-    if length(comp_ind) == 1 && isempty(ALLEEG(abset).dipfit.model(comp).posxyz)
+    if length(comp_ind) == 1 & isempty(ALLEEG(abset).dipfit.model(comp).posxyz)
         warndlg2(strvcat('There is no dipole information available in', ...
                        [ 'dataset ' num2str(abset) ' for this component, abort plotting']), 'Aborting plot dipoles');
         return;
-    end
+    end;
     if ~isfield(STUDY.cluster(cls),'dipole')
         STUDY = std_centroid(STUDY,ALLEEG, cls , 'dipole');
     elseif isempty(STUDY.cluster(cls).dipole)
@@ -677,8 +438,8 @@ function STUDY = std_centroid(STUDY,ALLEEG, clsind, tmp);
                     if all(posxyz(2,:) == [ 0 0 0 ])
                         posxyz(2,:) = [];
                         momxyz(2,:) = [];
-                    end
-                end
+                    end;
+                end;
                 tmppos = tmppos + mean(posxyz,1);
                 tmpmom = tmpmom + mean(momxyz,1);
                 tmprv = tmprv + ALLEEG(abset).dipfit.model(comp).rv;
@@ -695,7 +456,7 @@ function STUDY = std_centroid(STUDY,ALLEEG, clsind, tmp);
         centroid{clust}.dipole.posxyz =  tmppos/ndip;
         centroid{clust}.dipole.momxyz =  tmpmom/ndip;
         centroid{clust}.dipole.rv =  tmprv/ndip;
-        if strcmpi(ALLEEG(abset).dipfit.coordformat, 'spherical') && (~isfield(ALLEEG(abset).dipfit, 'hdmfile')) %old dipfit
+        if strcmpi(ALLEEG(abset).dipfit.coordformat, 'spherical') & (~isfield(ALLEEG(abset).dipfit, 'hdmfile')) %old dipfit
             centroid{clust}.dipole.maxr = max_r;
         end
         STUDY.cluster(clsind(clust)).dipole = centroid{clust}.dipole;
@@ -722,8 +483,8 @@ function dipole = computecentroid(alldipoles)
                 if all(alldipoles(k).posxyz(2,:) == [ 0 0 0 ])
                     alldipoles(k).posxyz(2,:) = [];
                     alldipoles(k).momxyz(2,:) = [];
-                end
-            end
+                end;
+            end;
             if ~isempty(alldipoles(k).posxyz)
                 dipole.posxyz = dipole.posxyz + mean(alldipoles(k).posxyz,1);
                 dipole.momxyz = dipole.momxyz + mean(alldipoles(k).momxyz,1);
@@ -732,14 +493,14 @@ function dipole = computecentroid(alldipoles)
             elseif warningon
                 disp('Some components do not have dipole information');
                 warningon = 0;
-            end
+            end;
         end
         dipole.posxyz = dipole.posxyz/count;
         dipole.momxyz = dipole.momxyz/count;
         dipole.rv     = dipole.rv/count;
         if isfield(alldipoles, 'maxr')
             dipole.maxr = alldipoles(1).max_r;
-        end
+        end;
         
 function [cluster_dip_models, options] = dipgroups(ALLEEG, STUDY, cls, comp_to_disp, cluster_dip_models, options);
 
@@ -814,18 +575,8 @@ function [cluster_dip_models, options] = dipgroups(ALLEEG, STUDY, cls, comp_to_d
             options{1,n+1} = dipnames;
         end
     end
-    
-% ========================================================================================
-% multicolor mode support functions
-function str = componentText(~,obj)
-% look up component name--used in data cursor callback in 'multicolor' mode
-try
-  str = obj.Target.UserData.name;
-  h=findall(gcf,'type','hggroup');
-  h(1).FontSize = 14;
-catch
-  str = '';
-end
+        
 
+   
 
 

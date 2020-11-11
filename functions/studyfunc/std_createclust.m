@@ -37,61 +37,50 @@
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, June 07, 2005, hilit@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [STUDY] = std_createclust(STUDY, ALLEEG, varargin)
 
 if nargin< 2
     help std_createclust;
     return;
-end
+end;
 
 % decoding options for backward compatibility
 % -------------------------------------------
 options = {};
-if length(varargin) > 0 && ~ischar(varargin{1})
+if length(varargin) > 0 && ~isstr(varargin{1})
     % STUDY, IDX, algorithm, parentClusterNumber
     if isnumeric(ALLEEG)
         options = { options{:} 'clusterind' ALLEEG };
-        if nargin > 3, options = { options{:} 'centroid'      varargin{1} }; end
-        if nargin > 4, options = { options{:} 'algorithm'     varargin{2} }; end
+        if nargin > 3, options = { options{:} 'centroid'      varargin{1} }; end;
+        if nargin > 4, options = { options{:} 'algorithm'     varargin{2} }; end;
         ALLEEG = [];
-    end
+    end;
 elseif length(varargin) < 2
     options = { options{:} 'name' varargin{1} };
 else
     options =  varargin;
-end
+end;
 opt = finputcheck(options, { 'name'             'string'   []  'Cls';
                              'clusterind'       'integer'  []  length(STUDY.cluster)+1;
                              'parentcluster'    'string'   { 'on','off' }  'off';
                              'algorithm'        'cell'     []  {};
                              'ignore0'          'string'   { 'on','off' }  'off';
                              'centroid'         'real'     []  [] }, 'std_createclust');
-if ischar(opt), error(opt); end
+if isstr(opt), error(opt); end;
 
 % opt.clusterind - index of cluster for each component. Ex: 63 components and 2
 % clusters: opt.clusterind will be a 61x1 vector of 1 and 2 (and 0=outlisers)
@@ -107,10 +96,10 @@ if strcmpi(opt.parentcluster, 'on')
     STUDY.cluster = [];
     for index = 1:length(sameica)
         newcomps = STUDY.datasetinfo(sameica{index}(1)).comps;
-        if isempty(newcomps), newcomps = [1:size(ALLEEG(sameica{index}(1)).icaweights,1)]; end
+        if isempty(newcomps), newcomps = [1:size(ALLEEG(sameica{index}(1)).icaweights,1)]; end;
         comps = [ comps newcomps ];
         sets(length(sameica{index}):-1:1,end+1:end+length(newcomps)) = repmat( sameica{index}', [1 length(newcomps) ] );
-    end
+    end;
     sets(find(sets == 0))   = NaN;
     STUDY.cluster(1).name   = 'Parentcluster 1';
     STUDY.cluster(1).sets   = sets;
@@ -119,6 +108,9 @@ if strcmpi(opt.parentcluster, 'on')
     STUDY.cluster(1).child  = {};
     STUDY.cluster.preclust.preclustparams = [];    
     STUDY.cluster.preclust.preclustdata   = []; 
+    if isfield(STUDY, 'design') && ~isempty(STUDY.design)
+        STUDY.cluster = std_setcomps2cell(STUDY, 1);
+    end;
 else
     % Find the next available cluster index
     % -------------------------------------
@@ -133,7 +125,7 @@ else
             if ~isempty(STUDY.cluster(k).parent)
                 %strcmp(STUDY.cluster(k).parent,STUDY.cluster(STUDY.etc.preclust.clustlevel).name) 
                 STUDY.cluster(k).preclust.preclustparams = STUDY.etc.preclust.preclustparams;
-            end
+            end;
         end
     end
     len = length(STUDY.cluster);
@@ -154,7 +146,7 @@ else
     elseif ~isfield(STUDY.etc.preclust, 'clustlevel')
         STUDY.etc.preclust.clustlevel = 1;
         STUDY.etc.preclust.preclustdata = [];
-    end
+    end;
     
     % create all clusters
     % -------------------
@@ -179,13 +171,14 @@ else
              STUDY.cluster(k+len).preclust.preclustdata   = STUDY.etc.preclust.preclustdata(tmp,:);
              STUDY.cluster(k+len).preclust.preclustparams = STUDY.etc.preclust.preclustparams;
         else STUDY.cluster(k+len).preclust.preclustdata   = [];
-        end
+        end;
+        STUDY.cluster(k+len) = std_setcomps2cell(STUDY, k+len);
 
         %update parents clusters with cluster child indices
         % -------------------------------------------------
         STUDY.cluster(STUDY.etc.preclust.clustlevel).child{end+1} = STUDY.cluster(k+nc).name;
     end
-end
+end;
 
 
 % Find out the highst cluster id number (in cluster name), to find
@@ -195,7 +188,7 @@ end
 % % find max cluster ID
 % 
 % max_id = 0;
-% if ~isfield(STUDY, 'cluster'), STUDY.cluster = []; end
+% if ~isfield(STUDY, 'cluster'), STUDY.cluster = []; end;
 % for k = 1:length(STUDY.cluster)
 %     ti = strfind(STUDY.cluster(k).name, ' ');
 %     clus_id = STUDY.cluster(k).name(ti(end) + 1:end);
@@ -210,10 +203,10 @@ end
 %     if ~iscell(STUDY.cluster(1).child)
 %          STUDY.cluster(1).child = { opt.name };
 %     else STUDY.cluster(1).child = { STUDY.cluster(1).child{:} opt.name };
-%     end
+%     end;
 % else  
 %     STUDY.cluster(clustind).parent{1} = 'manual'; % update parent cluster if exists.
-% end
+% end;
 % STUDY.cluster(clustind).name = opt.name;
 % STUDY.cluster(clustind).child = [];
 % STUDY.cluster(clustind).comps = [];
@@ -223,24 +216,24 @@ end
 % STUDY.cluster(clustind).preclust.preclustparams = [];
 % STUDY.cluster(clustind).preclust.preclustdata = [];
 % 
-% if (~isempty(opt.datasets) || ~isempty(opt.subjects)) && ~isempty(opt.components)
+% if (~isempty(opt.datasets) | ~isempty(opt.subjects)) & ~isempty(opt.components)
 %     
 %     % convert subjects to dataset indices
 %     % -----------------------------------
 %     if ~isempty(opt.subjects)
 %         if length(opt.subjects) ~= length(opt.components)
 %             error('If subjects are specified, the length of the cell array must be the same as for the components');
-%         end
+%         end;
 %         alls = { ALLEEG.subject };
 %         for index = 1:length(opt.subjects)
 %             tmpinds = strmatch(opt.subjects{index}, alls, 'exact');
 %             if isempty(tmpinds)
 %                 error('Cannot find subject');
-%             end
+%             end;
 %             opt.datasets(1:length(tmpinds),index) = tmpinds;
-%         end
+%         end;
 %         opt.datasets(opt.datasets(:) == 0) = NaN;
-%     end
+%     end;
 %     
 %     % deal with cell array inputs
 %     % ---------------------------
@@ -252,13 +245,13 @@ end
 %                 if iscell(opt.datasets)
 %                      newdats  = [ newdats  opt.datasets{ind1}' ];
 %                 else newdats  = [ newdats  opt.datasets(:,ind1) ];
-%                 end
+%                 end;
 %                 newcomps = [ newcomps opt.components{ind1}(ind2) ];
-%             end
-%         end
+%             end;
+%         end;
 %         opt.datasets   = newdats;
 %         opt.components = newcomps;
-%     end
+%     end;
 %     
 %     % create .sets, .comps, .setinds, .allinds fields
 %     % -----------------------------------------------
@@ -269,4 +262,4 @@ end
 %     STUDY.cluster(clustind) = std_setcomps2cell( STUDY, clustind);
 %     %[ STUDY.cluster(finalinds(ind)) setinds allinds ] =
 %         %std_setcomps2cell(STUDY, finalinds(ind));
-% end
+% end;

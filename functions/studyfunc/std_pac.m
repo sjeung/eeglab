@@ -59,37 +59,26 @@
 
 % Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, arno@sccn.ucsd.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function [X, times, freqs, parameters] = std_pac(EEG, varargin)
 
 if nargin < 1
     help std_pac;
     return;
-end
+end;
 
 options = {};
 [g timefargs] = finputcheck(varargin, { ...
@@ -112,11 +101,11 @@ options = {};
                         'interp'        'struct'      { }     struct([]);
                         'rmcomps'       'integer'     []      [];
                         'freqscale'     'string'      []      'log' }, 'std_pac', 'ignore');
-if ischar(g), error(g); end
+if isstr(g), error(g); end;
 
 % checking input parameters
 % -------------------------
-if isempty(g.components1) && isempty(g.channels1)
+if isempty(g.components1) & isempty(g.channels1)
     if isempty(EEG(1).icaweights)
         error('EEG.icaweights not found');
     end
@@ -139,48 +128,48 @@ elseif ~isempty(g.components1)
     filenamepac   = fullfile(EEG.filepath, [ EEG.filename(1:end-3) 'icapac' ]);
     if ~isempty(g.channels1)
         error('Cannot compute PAC for components and channels at the same time');
-    end
+    end;
 elseif ~isempty(g.channels1)
     g.indices1 = std_chaninds(EEG, g.channels1);
     g.indices2 = std_chaninds(EEG, g.channels2);
     prefix = 'chan';
     filenamepac   = fullfile(EEG.filepath, [ EEG.filename(1:end-3) 'datpac' ]);
-end
+end;
 
 % Compute PAC parameters
 % -----------------------
 parameters = { 'wavelet', g.cycles, 'padratio', g.padratio, ...
                'freqs2', g.freqphase, 'wavelet2', g.cyclephase, 'freqscale', g.freqscale, timefargs{:} };
-if length(g.freqs)>0, parameters = { parameters{:} 'freqs' g.freqs }; end
+if length(g.freqs)>0, parameters = { parameters{:} 'freqs' g.freqs }; end;
 
 % Check if PAC information found in datasets and if fits requested parameters 
 % ----------------------------------------------------------------------------
-if exist( filenamepac ) && strcmpi(g.recompute, 'off')
+if exist( filenamepac ) & strcmpi(g.recompute, 'off')
     fprintf('Use existing file for PAC: %s\n', filenamepac);
     if ~isempty(g.components1)
          [X, times, freqs, parameters] = std_readpac(EEG, 1,  g.indices1,  g.indices2, g.timerange, g.freqrange);
     else [X, times, freqs, parameters] = std_readpac(EEG, 1, -g.indices1, -g.indices2, g.timerange, g.freqrange);
-    end
+    end;
     return;
-end
+end;
 
 % return parameters
 % -----------------
 if strcmpi(g.getparams, 'on')
     X = []; times = []; freqs = [];
     return;
-end
+end;
 
 options = {};
 if ~isempty(g.components1)
     tmpdata = eeg_getdatact(EEG, 'component', [1:size(EEG(1).icaweights,1)]);
 else
     EEG.data = eeg_getdatact(EEG, 'channel', [1:EEG.nbchan], 'rmcomps', g.rmcomps);
-    if ~isempty(g.rmcomps), options = { options{:} 'rmcomps' g.rmcomps }; end
+    if ~isempty(g.rmcomps), options = { options{:} 'rmcomps' g.rmcomps }; end;
     if ~isempty(g.interp), 
         EEG = eeg_interp(EEG, g.interp, 'spherical'); 
         options = { options{:} 'interp' g.interp };
-    end
+    end;
     tmpdata = EEG.data;
 end;        
 
@@ -195,11 +184,11 @@ for k = 1:length(g.indices1)  % for each (specified) component
         % --------------------
         timefdata1  = tmpdata(g.indices1(k),:,:);
         timefdata2  = tmpdata(g.indices2(l),:,:);
-        if strcmpi(g.plot, 'on'), figure; end
+        if strcmpi(g.plot, 'on'), figure; end;
         %[logersp,logitc,logbase,times,logfreqs,logeboot,logiboot,alltfX] ...
         [pacvals, times, freqs1, freqs2] = pac( timefdata1, timefdata2, EEG(1).srate, 'tlimits', [EEG.xmin EEG.xmax]*1000, tmpparams{1:end});
         all_pac = setfield( all_pac, [ prefix int2str(g.indices1(k)) '_' int2str(g.indices2(l)) '_pac' ], squeeze(single(pacvals )));
-    end
+    end;
 end
 
 % Save PAC into file
@@ -214,14 +203,14 @@ if ~isempty(g.channels1)
         tmpchanlocs = EEG(1).chanlocs;
         all_pac.chanlabels1   = { tmpchanlocs(g.indices1).labels };
         all_pac.chanlabels2   = { tmpchanlocs(g.indices2).labels };
-    end
-end
+    end;
+end;
 
 std_savedat( filenamepac , all_pac );
 if ~isempty(g.components1)
      [X, times, freqs, parameters] = std_readpac(EEG, 1,  g.indices1,  g.indices2, g.timerange, g.freqrange);
 else [X, times, freqs, parameters] = std_readpac(EEG, 1, -g.indices1, -g.indices2, g.timerange, g.freqrange);
-end
+end;
 
 % --------------------------------------------------------
 % -------------------- READ PAC DATA ---------------------
@@ -230,22 +219,22 @@ function [pacvals, freqs, timevals, params] = std_readpac(ALLEEG, abset, comp1, 
 
 if nargin < 5
     timewindow = [];
-end
+end;
 if nargin < 6
     freqrange = [];
-end
+end;
 
 % multiple entry
 % --------------
-if length(comp1) > 1 || length(comp2) > 1
+if length(comp1) > 1 | length(comp2) > 1
     for index1 = 1:length(comp1)
         for index2 = 1:length(comp2)
             [tmppac, freqs, timevals, params] = std_readpac(ALLEEG, abset, comp1(index1), comp2(index2), timewindow, freqrange);
             pacvals(index1,index2,:,:,:) = tmppac;
-        end
-    end
+        end;
+    end;
     return;
-end
+end;
 
 for k = 1: length(abset)    
     
@@ -257,12 +246,12 @@ for k = 1: length(abset)
     else    
         filename = fullfile( ALLEEG(abset(k)).filepath,[ ALLEEG(abset(k)).filename(1:end-3) 'icapac']);
         prefix = 'comp';
-    end
+    end;
     try
         tmppac = load( '-mat', filename, 'parameters', 'times', 'freqs');
     catch
         error( [ 'Cannot read file ''' filename '''' ]);
-    end
+    end;
     
     tmppac.parameters = removedup(tmppac.parameters);
     params    = struct(tmppac.parameters{:});
@@ -273,7 +262,7 @@ for k = 1: length(abset)
         freqs  = [];
         timevals  = [];
         return;
-    end
+    end;
     tmppac   = load( '-mat', filename, 'parameters', 'times', 'freqs', ...
                      [ prefix int2str(comp1) '_' int2str(comp2) '_pac']);
     
@@ -286,7 +275,7 @@ end
 % select plotting or clustering time/freq range
 % ---------------------------------------------
 if ~isempty(timewindow)
-    if timewindow(1) > tmppac.times(1) || timewindow(end) < tmppac.times(end)
+    if timewindow(1) > tmppac.times(1) | timewindow(end) < tmppac.times(end)
         maxind = max(find(tmppac.times <= timewindow(end)));
         minind = min(find(tmppac.times >= timewindow(1)));
     else
@@ -298,7 +287,7 @@ else
     maxind = tlen;
 end
 if ~isempty(freqrange)
-    if freqrange(1) > exp(1)^tmppac.freqs(1) || freqrange(end) < exp(1)^tmppac.freqs(end)
+    if freqrange(1) > exp(1)^tmppac.freqs(1) | freqrange(end) < exp(1)^tmppac.freqs(end)
         fmaxind = max(find(tmppac.freqs <= freqrange(end)));
         fminind = min(find(tmppac.freqs >= freqrange(1)));
     else
@@ -317,9 +306,9 @@ for cond  = 1:length(abset)
         pac = pacall{cond}(fminind:fmaxind,minind:maxind);
     catch
         pac = pacall{cond}; % for 'method', 'latphase'
-    end
+    end;
     pacvals(:,:,cond) = pac;
-end
+end;
 freqs    = tmppac.freqs(fminind:fmaxind);
 timevals = tmppac.times(minind:maxind);
 
@@ -329,6 +318,6 @@ function cella = removedup(cella)
     [tmp indices] = unique_bc(cella(1:2:end));
     if length(tmp) ~= length(cella)/2
         %fprintf('Warning: duplicate ''key'', ''val'' parameter(s), keeping the last one(s)\n');
-    end
+    end;
     cella = cella(sort(union(indices*2-1, indices*2)));
 

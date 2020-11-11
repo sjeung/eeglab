@@ -30,36 +30,25 @@
 
 % Copyright (C) Arnaud Delorme, CERCO, arno@salk.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 function STUDY = std_changroup(STUDY, ALLEEG, alllocs, interp);
 
 if nargin < 4
     interp = 'off';
-end
+end;
 
 % union of all channel structures
 % -------------------------------
@@ -67,19 +56,78 @@ inputloc = 0;
 if nargin >= 3
     if ~isempty(alllocs)
         inputloc = 1;
-    end
-end
+    end;
+end;
 if ~inputloc
     alllocs = eeg_mergelocs(ALLEEG.chanlocs);
-end
+end;
 
 % create group for each electrode
 % -------------------------------
 if isstruct(alllocs)
     alllocs = { alllocs.labels };
-end
+end;
 STUDY.changrp = [];
 for indc = 1:length(alllocs)
     STUDY.changrp(indc).name     = alllocs{indc};
     STUDY.changrp(indc).channels = { alllocs{indc} };
-end
+    tmp = std_chanlookupnew( STUDY, ALLEEG, STUDY.changrp(indc), interp);
+    STUDY.changrp(indc).setinds = tmp.setinds;
+    STUDY.changrp(indc).allinds = tmp.allinds;
+    STUDY.changrp(indc).centroid = [];
+end;
+
+% if strcmpi(interp, 'off')
+%     if length(unique( cellfun(@length, { ALLEEG.chanlocs }))) ~= 1
+%          STUDY.changrpstatus = 'some channels missing in some datasets';
+%     else STUDY.changrpstatus = 'all channels present in all datasets';
+%     end;
+% else STUDY.changrpstatus = 'all channels present in all datasets - interpolated';
+% end;
+
+%STUDY.changrp(indc).name = [ 'full montage' ];
+%STUDY.changrp(indc).channels = { alllocs.labels };
+%tmp = std_chanlookup( STUDY, ALLEEG, STUDY.changrp(indc));
+%STUDY.changrp(indc).chaninds = tmp.chaninds;
+return; 
+    
+% find datasets and channel indices
+% ---------------------------------
+function changrp = std_chanlookupnew( STUDY, ALLEEG, changrp, interp);
+
+    setinfo       = STUDY.design(STUDY.currentdesign).cell;
+    allconditions = STUDY.design(STUDY.currentdesign).variable(1).value;
+    allgroups     = STUDY.design(STUDY.currentdesign).variable(2).value;
+    nc = max(length(allconditions),1);
+    ng = max(length(allgroups),    1);
+    changrp.allinds = cell( nc, ng );
+    changrp.setinds = cell( nc, ng );
+    for index = 1:length(setinfo)
+        % get index of independent variables
+        % ----------------------------------
+        condind = std_indvarmatch( setinfo(index).value{1}, allconditions);
+        grpind  = std_indvarmatch( setinfo(index).value{2}, allgroups    );
+        if isempty(allconditions), condind = 1; end;
+        if isempty(allgroups),     grpind  = 1; end;
+
+        % scan all channel labels
+        % -----------------------
+        if strcmpi(interp, 'off')
+            datind  = setinfo(index).dataset;
+            tmpchanlocs = ALLEEG(datind(1)).chanlocs;
+            tmplocs = { tmpchanlocs.labels };
+            for indc = 1:length(changrp.channels) % usually just one channel
+                ind = strmatch( changrp.channels{indc}, tmplocs, 'exact');
+                if length(ind) > 1, error([ 'Duplicate channel label ''' tmplocs{ind(1)} ''' for dataset ' int2str(datind) ]); end;
+                if ~isempty(ind)
+                    changrp.allinds{ condind, grpind } = [ changrp.allinds{ condind, grpind } ind ];
+                    changrp.setinds{ condind, grpind } = [ changrp.setinds{ condind, grpind } index ];
+                end;
+            end;
+        else % interpolation is "on", all channels for all datasets
+            alllocs = { STUDY.changrp.name };
+            ind = strmatch( changrp.name, alllocs, 'exact');
+            changrp.allinds{ condind, grpind } = [ changrp.allinds{ condind, grpind } ind   ];
+            changrp.setinds{ condind, grpind } = [ changrp.setinds{ condind, grpind } index ];
+        end;
+    end;

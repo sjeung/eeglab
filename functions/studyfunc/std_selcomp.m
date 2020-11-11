@@ -32,39 +32,12 @@
 % 
 % See also: std_erpplot(), std_specplot() and std_erspplot()
 
-% Copyright (C) 2006 Arnaud Delorme
-%
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
-%
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
-%
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
-
 function [data, subject, comp_names] = std_selcomp(STUDY, data, clust, setinds, compinds, compsel)
 
 if nargin < 2
     help std_selcomp;
     return;
-end
+end;
 
 optndims = ndims(data{1});
 comp_names = {};
@@ -72,12 +45,12 @@ subject    = '';
 
 % find and select group
 % ---------------------
-if isempty(compsel), return; end
+if isempty(compsel), return; end;
 sets   = STUDY.cluster(clust).sets(:,compsel);
 comps  = STUDY.cluster(clust).comps(compsel);
 %grp    = STUDY.datasetinfo(sets(1)).group;
 %grpind = strmatch( grp, STUDY.group );
-%if isempty(grpind), grpind = 1; end
+%if isempty(grpind), grpind = 1; end;
 %data = data(:,grpind);
 
 % find component
@@ -89,8 +62,8 @@ for c = 1:length(data(:))
         setindex = STUDY.design(STUDY.currentdesign).cell(setinds{c}(ind)).dataset;
         if compinds{c}(ind) == comps && any(setindex == sets)
             rminds(ind) = [];
-        end
-    end
+        end;
+    end;
         
     if optndims == 2
         data{c}(:,rminds) = []; %2-D
@@ -98,18 +71,18 @@ for c = 1:length(data(:))
         data{c}(:,:,rminds) = []; %3-D
     else
         data{c}(:,:,:,rminds) = []; %3-D
-    end
+    end;
     comp_names{c,1} = comps;
-end
+end;
 % for c = 1:size(data,1)
 %     for ind = 1:length(compinds{1,grpind})
-%         if compinds{1,grpind}(ind) == comps && any(setinds{1,grpind}(ind) == sets)
+%         if compinds{1,grpind}(ind) == comps & any(setinds{1,grpind}(ind) == sets)
 %             if optndims == 2
 %                  data{c} = data{c}(:,ind);
 %             else data{c} = data{c}(:,:,ind);
-%             end
+%             end;
 %             comp_names{c,1} = comps;
-%         end
-%     end
-% end
+%         end;
+%     end;
+% end;
 subject = STUDY.datasetinfo(sets(1)).subject;

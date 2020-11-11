@@ -24,7 +24,6 @@
 % Outputs:
 %   STUDY       - an EEGLAB STUDY set of loaded EEG structures
 %   neighbors   - Fieldtrip channel neighbour structure
-%   limostruct  - structure compatible with LIMO (need to be saved in a file)
 %
 % Author: Arnaud Delorme, SCCN, UCSD, 2012-
 %
@@ -32,37 +31,26 @@
 
 % Copyright (C) Arnaud Delorme
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [STUDY neighbors limostruct] = std_prepare_neighbors(STUDY, ALLEEG, varargin);
+function [STUDY neighbors] = std_prepare_neighbors(STUDY, ALLEEG, varargin);
 
 neighbors = [];
 if nargin < 2
     return;
-end
+end;
 
 [opt addopts] = finputcheck( varargin, {  'force'    'string'  { 'on','off' }   'off';
                                           'channels' 'cell'    {}               {} }, 'std_stat', 'ignore');
@@ -75,7 +63,7 @@ if strcmpi(opt.force, 'on') || (strcmpi(STUDY.etc.statistics.fieldtrip.mcorrect,
     if isempty(EEG.chanlocs)
         disp('std_prepare_neighbors: cannot prepare channel neighbour structure because of empty channel structures');
         return;
-    end
+    end;
     
     if ~isempty(STUDY.etc.statistics.fieldtrip.channelneighbor) && isempty(addopts) && ...
         length(STUDY.etc.statistics.fieldtrip.channelneighbor) == length(EEG.chanlocs)
@@ -88,7 +76,7 @@ if strcmpi(opt.force, 'on') || (strcmpi(STUDY.etc.statistics.fieldtrip.mcorrect,
         if ~isempty(opt.channels)
             indChans = eeg_chaninds(EEG, opt.channels);
             EEG.chanlocs = EEG.chanlocs(indChans);
-        end
+        end;
         
         EEG.nbchan   = length(EEG.chanlocs);
         EEG.data     = zeros(EEG.nbchan,100,1);
@@ -105,46 +93,16 @@ if strcmpi(opt.force, 'on') || (strcmpi(STUDY.etc.statistics.fieldtrip.mcorrect,
         addparams = eval( [ '{' STUDY.etc.statistics.fieldtrip.channelneighborparam '}' ]);
         for index = 1:2:length(addparams)
             tmpcfg = setfield(tmpcfg, addparams{index}, addparams{index+1});
-        end
+        end;
         for index = 1:2:length(addopts)
             tmpcfg = setfield(tmpcfg, addopts{index}, addopts{index+1});
-        end
+        end;
         warning off;
-        if isfield(EEG.chanlocs, 'theta') && ~isempty(EEG.chanlocs(1).theta)
-            tmpcfg = rmfield(tmpcfg, 'cfg');
-            tmpcfg2 = tmpcfg;
-            tmpcfg  = rmfield(tmpcfg, 'label'); % first input must not be data
-            tmpcfg2 = rmfield(tmpcfg2, 'method'); % second input must not be method
-            % tmpcfg = rmfield(tmpcfg, 'label');
-            % --> removing label seems to make ft_prepare_neighbours to crash
-            cfg.neighbors = ft_prepare_neighbours(tmpcfg, tmpcfg2);
-            neighbors = cfg.neighbors;
-        else
-            neighbors = [];
-        end
+        cfg.neighbors = ft_prepare_neighbours(tmpcfg, tmpcfg);
         warning on;
+        neighbors = cfg.neighbors;
         
-    end
+    end;
 
     STUDY.etc.statistics.fieldtrip.channelneighbor = neighbors;
-    
-    if nargout > 2
-        limostruct.expected_chanlocs = EEG.chanlocs;
-
-        if ~isempty(neighbors)
-            allLabels = { neighbors.label };
-            limostruct.channeighbstructmat = zeros(length(EEG.chanlocs));
-            for iN = 1:length(neighbors)
-                if ~isequal(neighbors(iN).label, limostruct.expected_chanlocs(iN).labels)
-                    error('Wrong label');
-                else
-                    [tmp posChan] = intersect( allLabels, neighbors(iN).neighblabel);
-                    limostruct.channeighbstructmat(iN,posChan) = 1;
-                    limostruct.channeighbstructmat(posChan,iN) = 1;
-                end
-            end
-        else
-            limostruct.channeighbstructmat = ones(length(EEG.chanlocs));
-        end
-    end
-end
+end;

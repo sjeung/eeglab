@@ -27,30 +27,19 @@
 
 % Copyright (C) Arnaud Delorme, CERCO, 2006, arno@salk.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
-% for the documentation and details.
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
 %
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are met:
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
 %
-% 1. Redistributions of source code must retain the above copyright notice,
-% this list of conditions and the following disclaimer.
-%
-% 2. Redistributions in binary form must reproduce the above copyright notice,
-% this list of conditions and the following disclaimer in the documentation
-% and/or other materials provided with the distribution.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-% THE POSSIBILITY OF SUCH DAMAGE.
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 % Deprecated:
 %              - [chanlocs structure] channel location structure containing
@@ -62,13 +51,13 @@ function [STUDY, ALLEEG] = std_interp(STUDY, ALLEEG, chans, method);
 if nargin < 2
     help std_interp;
     return;
-end
+end;
 if nargin < 3
     chans = [];
-end
+end;
 if nargin < 4
     method = 'spherical';
-end
+end;
 
 % union of all channel structures
 % -------------------------------
@@ -82,9 +71,9 @@ if iscell(chans)
         tmpind = strmatch(lower(chans{index}), alllabs, 'exact');
         if isempty(tmpind)
             error( sprintf('Channel named ''%s'' not found in any dataset', chans{index}));
-        end
-    end
-end
+        end;
+    end;
+end;
 
 % read all STUDY datasets and interpolate electrodes
 % ---------------------------------------------------
@@ -102,7 +91,7 @@ for index = 1:length(STUDY.datasetinfo)
        interplocs = alllocs(union(id1, id2));
    else
        interplocs = chans;
-   end
+   end;
    
    if length(interplocs) ~= length(tmplocs)
        
@@ -112,8 +101,8 @@ for index = 1:length(STUDY.datasetinfo)
        if isfield(ALLEEG(tmpind).chaninfo, 'nodatchans')
             if isfield(ALLEEG(tmpind).chaninfo.nodatchans, 'labels')
                 extrachans = ALLEEG(tmpind).chaninfo.nodatchans;
-            end
-       end
+            end;
+       end;
        tmplabels = { tmplocs.labels };
        for i=1:length(interplocs)
            ind = strmatch( interplocs(i).labels, tmplabels, 'exact');
@@ -124,9 +113,9 @@ for index = 1:length(STUDY.datasetinfo)
                if ~isempty(ind)
                     fprintf('Found position of %s in chaninfo structure\n', interplocs(i).labels);
                     interplocs(i) = extrachans(ind);
-               end
-           end
-       end
+               end;
+           end;
+       end;
        
         % perform interpolation
         % ---------------------
@@ -138,7 +127,7 @@ for index = 1:length(STUDY.datasetinfo)
         
         % update dataset in EEGLAB
         % ------------------------
-        if ischar(ALLEEG(tmpind).data)
+        if isstr(ALLEEG(tmpind).data)
             tmpdata = ALLEEG(tmpind).data;
             [ ALLEEG EEG ] = eeg_store(ALLEEG, EEG, tmpind);
             ALLEEG(tmpind).data  = tmpdata;
@@ -147,11 +136,11 @@ for index = 1:length(STUDY.datasetinfo)
         else
             [ ALLEEG EEG ] = eeg_store(ALLEEG, EEG, tmpind);
             ALLEEG(tmpind).saved = 'yes';
-        end
+        end;
     else
         fprintf('No need for interpolation for dataset %d\n', tmpind);
-    end
-end
+    end;
+end;
            
        
 function checkchans(STUDY, ALLEEG)
@@ -175,13 +164,13 @@ function checkchans(STUDY, ALLEEG)
                        if alllocs(id2(ind)).theta == tmplocs2(tmpmatch).theta
                            datind = ind2;
                            break;
-                       end
-                   end
-               end
+                       end;
+                   end;
+               end;
 
                error(sprintf( [ 'Dataset %d and %d do not have the same channel location\n' ...
                    'for electrode ''%s''' ], datind, tmpind, tmplocs(id1(ind)).labels));
-           end
-       end
-    end
+           end;
+       end;
+    end;
 
