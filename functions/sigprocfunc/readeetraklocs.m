@@ -82,9 +82,37 @@ function chanlocs = readeetraklocs( filename )
     
     % remove all non-numbers from positions 
     % -------------------------------------
-    positions(cellfun(@ischar,positions)) = {NaN};
-    positionMatrix                        = cell2mat(positions);
-    positions                             = positionMatrix(:,all(~isnan(positionMatrix)));
+    positionMatrix = NaN(size(positions,1),3);
+
+    for rowind = 1:size(positions,1)
+        
+        coordind = 0;
+        
+        for colind = 1:size(positions,2)
+            
+            if isnumeric(positions{rowind,colind})
+                
+                coordind = coordind + 1; 
+                
+                positionMatrix(rowind, coordind) = positions{rowind,colind}; 
+                
+                if coordind == 3
+                    
+                    coordind = 0;
+                    
+                    break;
+                end
+            end
+            
+        end
+        
+    end
+    
+    positions = positionMatrix;
+%     
+%     positions(cellfun(@ischar,positions)) = {NaN};
+%     positionMatrix                        = cell2mat(positions);
+%     positions                             = positionMatrix(:,all(~isnan(positionMatrix)));
     
     % create structure
     % ----------------
